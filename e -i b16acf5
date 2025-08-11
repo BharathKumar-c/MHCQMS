@@ -1,0 +1,3 @@
+[33m718e37b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m feat(backend): implement FastAPI backend with PostgreSQL integration, JWT authentication, patient management, and reports API for MHCQMS
+[33m44f1005[m feat(backend): implement FastAPI backend with PostgreSQL integration, JWT authentication, patient management, and reports API for MHCQMS
+[33mb16acf5[m[33m ([m[1;31morigin/main[m[33m)[m chore: initialize MHCQMS project structure with backend & frontend setup, config files, and README
