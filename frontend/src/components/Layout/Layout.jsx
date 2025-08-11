@@ -1,16 +1,15 @@
-import React from 'react';
-import { Container, Box } from '@mui/material';
-import Header from './Header';
+import { Container, Box } from '@mui/material'
+import Header from './Header'
 
 const Layout = ({ children }) => {
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box className="min-h-screen bg-gray-50">
       <Header />
-      <Container component="main" sx={{ flex: 1, py: 4 }}>
+      <Container maxWidth="xl" className="py-8">
         {children}
       </Container>
     </Box>
-  );
-};
+  )
+}
 
-export default Layout;
+export default Layout
