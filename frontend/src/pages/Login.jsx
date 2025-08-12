@@ -16,7 +16,7 @@ import { login, clearError } from '../features/authSlice'
 
 const Login = () => {
   const [credentials, setCredentials] = useState({
-    email: '',
+    username: '',
     password: '',
   })
   
@@ -74,10 +74,10 @@ const Login = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <TextField
             fullWidth
-            label="Email"
-            name="email"
-            type="email"
-            value={credentials.email}
+            label="Username"
+            name="username"
+            type="text"
+            value={credentials.username}
             onChange={handleChange}
             required
             variant="outlined"
@@ -114,7 +114,7 @@ const Login = () => {
 
         <Box className="mt-6 text-center">
           <Typography variant="body2" className="text-gray-500">
-            Demo Credentials: admin@mhcqms.com / password123
+            Demo Credentials: admin / password123
           </Typography>
         </Box>
       </Paper>

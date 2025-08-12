@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.schemas.user import UserLogin, Token, UserCreate, UserResponse
+from app.schemas.user import UserLogin, Token, UserCreate, UserResponse, LoginResponse
 from app.models.user import User
 from app.services.auth import AuthService
 from app.services.user import UserService
@@ -72,18 +72,28 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login",
-    response_model=Token,
+    response_model=LoginResponse,
     summary="User login",
-    description="Authenticate user and return JWT access token",
+    description="Authenticate user and return JWT access token with user information",
     responses={
         200: {
             "description": "Login successful",
             "content": {
                 "application/json": {
                     "example": {
-                        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
                         "token_type": "bearer",
-                        "expires_in": 3600
+                        "expires_in": 3600,
+                        "user": {
+                            "id": 1,
+                            "username": "admin",
+                            "email": "admin@mhcqms.com",
+                            "full_name": "Administrator",
+                            "is_active": True,
+                            "is_superuser": True,
+                            "created_at": "2024-01-01T10:00:00Z",
+                            "updated_at": None
+                        }
                     }
                 }
             }
@@ -96,7 +106,7 @@ async def login(
     db: Session = Depends(get_db)
 ):
     """
-    Authenticate user and return JWT access token.
+    Authenticate user and return JWT access token with user information.
     
     - **username**: User's username
     - **password**: User's password
@@ -112,10 +122,24 @@ async def login(
         )
     
     access_token = auth_service.create_access_token(data={"sub": user.username})
-    return Token(
-        access_token=access_token,
+    
+    # Convert user model to response schema
+    user_response = UserResponse(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        full_name=user.full_name,
+        is_active=user.is_active,
+        is_superuser=user.is_superuser,
+        created_at=user.created_at,
+        updated_at=user.updated_at
+    )
+    
+    return LoginResponse(
+        token=access_token,
         token_type="bearer",
-        expires_in=3600
+        expires_in=3600,
+        user=user_response
     )
 
 
