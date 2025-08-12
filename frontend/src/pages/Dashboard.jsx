@@ -11,8 +11,8 @@ import {
 import { 
   PeopleOutline, 
   CheckCircleOutline, 
-  ScheduleOutline,
-  TrendingUpOutline 
+  AccessTime,
+  TrendingUp 
 } from '@mui/icons-material'
 import { fetchPatients, fetchCompletedPatients, updateStats } from '../features/patientSlice'
 
@@ -95,7 +95,7 @@ const Dashboard = () => {
           <StatCard
             title="Average Wait Time"
             value={`${stats.averageWaitTime} min`}
-            icon={<ScheduleOutline className="text-4xl text-orange-600" />}
+            icon={<AccessTime className="text-4xl text-orange-600" />}
             color="text-orange-600"
             subtitle="Based on completed"
           />
@@ -105,7 +105,7 @@ const Dashboard = () => {
           <StatCard
             title="Efficiency Rate"
             value="85%"
-            icon={<TrendingUpOutline className="text-4xl text-purple-600" />}
+            icon={<TrendingUp className="text-4xl text-purple-600" />}
             color="text-purple-600"
             subtitle="Queue management"
           />
