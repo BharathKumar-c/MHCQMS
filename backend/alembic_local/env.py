@@ -16,9 +16,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.core.database import Base
 from app.core.config import settings
 
-# Import models to ensure they are available for migrations
-from app.models import User, Patient, Queue
-
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
