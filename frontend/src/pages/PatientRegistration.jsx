@@ -18,20 +18,22 @@ import {
   Divider
 } from '@mui/material'
 import { PersonAddOutlined, SaveOutlined, ClearOutlined } from '@mui/icons-material'
-import { addPatient } from '../features/patientSlice'
+import { registerPatientWithQueue } from '../features/patientSlice'
 
 const PatientRegistration = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    age: '',
+    first_name: '',
+    last_name: '',
+    date_of_birth: '',
     gender: '',
-    contact: '',
+    phone: '',
+    email: '',
     address: '',
-    appointmentTime: '',
-    priority: 'normal',
+    checkup_type: '',
+    priority: 0,
     symptoms: '',
-    emergencyContact: '',
-    emergencyPhone: '',
+    emergency_contact: '',
+    estimated_wait_time: 30,
   })
 
   const [errors, setErrors] = useState({})
@@ -58,14 +60,36 @@ const PatientRegistration = () => {
   const validateForm = () => {
     const newErrors = {}
     
-    if (!formData.name.trim()) newErrors.name = 'Name is required'
-    if (!formData.age) newErrors.age = 'Age is required'
+    if (!formData.first_name.trim()) newErrors.first_name = 'First name is required'
+    if (!formData.last_name.trim()) newErrors.last_name = 'Last name is required'
+    if (!formData.date_of_birth) newErrors.date_of_birth = 'Date of birth is required'
     if (!formData.gender) newErrors.gender = 'Gender is required'
-    if (!formData.contact.trim()) newErrors.contact = 'Contact number is required'
-    if (!formData.appointmentTime) newErrors.appointmentTime = 'Appointment time is required'
+    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required'
+    if (!formData.checkup_type.trim()) newErrors.checkup_type = 'Checkup type is required'
     
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
+  }
+
+  const transformFormData = () => {
+    // Transform the form data to match the backend schema
+    const transformed = {
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      date_of_birth: formData.date_of_birth,
+      gender: formData.gender,
+      phone: formData.phone,
+      email: formData.email || null,
+      address: formData.address || null,
+      emergency_contact: formData.emergency_contact || null,
+      medical_history: formData.symptoms || null,
+      checkup_type: formData.checkup_type,
+      priority: parseInt(formData.priority),
+      notes: formData.symptoms || null,
+      estimated_wait_time: parseInt(formData.estimated_wait_time) || 30
+    }
+    
+    return transformed
   }
 
   const handleSubmit = async (e) => {
@@ -74,105 +98,138 @@ const PatientRegistration = () => {
     if (!validateForm()) return
     
     try {
-      await dispatch(addPatient(formData)).unwrap()
+      const transformedData = transformFormData()
+      await dispatch(registerPatientWithQueue(transformedData)).unwrap()
       navigate('/queue')
     } catch (error) {
-      console.error('Failed to add patient:', error)
+      console.error('Failed to register patient:', error)
     }
   }
 
   const handleClear = () => {
     setFormData({
-      name: '',
-      age: '',
+      first_name: '',
+      last_name: '',
+      date_of_birth: '',
       gender: '',
-      contact: '',
+      phone: '',
+      email: '',
       address: '',
-      appointmentTime: '',
-      priority: 'normal',
+      checkup_type: '',
+      priority: 0,
       symptoms: '',
-      emergencyContact: '',
-      emergencyPhone: '',
+      emergency_contact: '',
+      estimated_wait_time: 30,
     })
     setErrors({})
   }
 
-  const getCurrentDateTime = () => {
+  const getCurrentDate = () => {
     const now = new Date()
     const year = now.getFullYear()
     const month = String(now.getMonth() + 1).padStart(2, '0')
     const day = String(now.getDate()).padStart(2, '0')
-    const hours = String(now.getHours()).padStart(2, '0')
-    const minutes = String(now.getMinutes()).padStart(2, '0')
-    return `${year}-${month}-${day}T${hours}:${minutes}`
+    return `${year}-${month}-${day}`
   }
 
   return (
-    <Container maxWidth="md">
-      <Paper elevation={3} className="p-8">
-        <Box className="text-center mb-8">
-          <PersonAddOutlined className="text-5xl text-blue-600 mb-4" />
-          <Typography variant="h4" component="h1" className="font-bold text-gray-800 mb-2">
-            Patient Registration
-          </Typography>
-          <Typography variant="body1" className="text-gray-600">
-            Add new patients to the queue management system
-          </Typography>
+    <Box className="max-w-4xl mx-auto space-y-8">
+      {/* Header Section */}
+      <Box className="text-center">
+        <Box className="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-6">
+          <PersonAddOutlined className="text-4xl text-blue-600" />
         </Box>
+        <Typography variant="h3" component="h1" className="font-bold text-gray-800 mb-3">
+          Patient Registration
+        </Typography>
+        <Typography variant="h6" className="text-gray-600 font-normal">
+          Add new patients to the queue management system
+        </Typography>
+      </Box>
 
-        {error && (
-          <Alert severity="error" className="mb-6">
-            {error}
-          </Alert>
-        )}
+      {error && (
+        <Alert severity="error" className="content-spacing">
+          {error}
+        </Alert>
+      )}
 
+      {/* Form Section */}
+      <Paper elevation={0} className="card p-8">
         <form onSubmit={handleSubmit}>
-          <Grid container spacing={3}>
+          <Grid container spacing={4}>
             {/* Basic Information */}
             <Grid item xs={12}>
-              <Typography variant="h6" className="font-semibold text-gray-700 mb-3">
-                Basic Information
-              </Typography>
+              <Box className="bg-blue-50 rounded-xl p-4 mb-6">
+                <Typography variant="h5" className="font-semibold text-blue-800 mb-2">
+                  Basic Information
+                </Typography>
+                <Typography variant="body2" className="text-blue-700">
+                  Enter the patient's personal details
+                </Typography>
+              </Box>
             </Grid>
             
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Full Name"
-                name="name"
-                value={formData.name}
+                label="First Name"
+                name="first_name"
+                value={formData.first_name}
                 onChange={handleChange}
-                error={!!errors.name}
-                helperText={errors.name}
+                error={!!errors.first_name}
+                helperText={errors.first_name}
                 required
                 variant="outlined"
+                size="medium"
+                className="search-field"
               />
             </Grid>
             
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Age"
-                name="age"
-                type="number"
-                value={formData.age}
+                label="Last Name"
+                name="last_name"
+                value={formData.last_name}
                 onChange={handleChange}
-                error={!!errors.age}
-                helperText={errors.age}
+                error={!!errors.last_name}
+                helperText={errors.last_name}
                 required
                 variant="outlined"
-                inputProps={{ min: 0, max: 150 }}
+                size="medium"
+                className="search-field"
               />
             </Grid>
             
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth required error={!!errors.gender}>
+              <TextField
+                fullWidth
+                label="Date of Birth"
+                name="date_of_birth"
+                type="date"
+                value={formData.date_of_birth}
+                onChange={handleChange}
+                error={!!errors.date_of_birth}
+                helperText={errors.date_of_birth}
+                required
+                variant="outlined"
+                size="medium"
+                className="search-field"
+                InputLabelProps={{ shrink: true }}
+                inputProps={{ max: getCurrentDate() }}
+              />
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth required error={!!errors.gender} size="medium">
                 <InputLabel>Gender</InputLabel>
                 <Select
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
                   label="Gender"
+                  variant="outlined"
+                  className="search-field"
                 >
                   <MenuItem value="male">Male</MenuItem>
                   <MenuItem value="female">Female</MenuItem>
@@ -184,14 +241,30 @@ const PatientRegistration = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Contact Number"
-                name="contact"
-                value={formData.contact}
+                label="Phone Number"
+                name="phone"
+                value={formData.phone}
                 onChange={handleChange}
-                error={!!errors.contact}
-                helperText={errors.contact}
+                error={!!errors.phone}
+                helperText={errors.phone}
                 required
                 variant="outlined"
+                size="medium"
+                className="search-field"
+              />
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Email Address"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                variant="outlined"
+                size="medium"
+                className="search-field"
               />
             </Grid>
             
@@ -205,50 +278,54 @@ const PatientRegistration = () => {
                 multiline
                 rows={2}
                 variant="outlined"
+                size="medium"
+                className="search-field"
               />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Divider className="my-4" />
             </Grid>
 
             {/* Appointment Details */}
             <Grid item xs={12}>
-              <Typography variant="h6" className="font-semibold text-gray-700 mb-3">
-                Appointment Details
-              </Typography>
+              <Box className="bg-green-50 rounded-xl p-4 mb-6 mt-8">
+                <Typography variant="h5" className="font-semibold text-green-800 mb-2">
+                  Appointment Details
+                </Typography>
+                <Typography variant="body2" className="text-green-700">
+                  Schedule and prioritize the appointment
+                </Typography>
+              </Box>
             </Grid>
             
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Appointment Time"
-                name="appointmentTime"
-                type="datetime-local"
-                value={formData.appointmentTime}
+                label="Checkup Type"
+                name="checkup_type"
+                value={formData.checkup_type}
                 onChange={handleChange}
-                error={!!errors.appointmentTime}
-                helperText={errors.appointmentTime}
+                error={!!errors.checkup_type}
+                helperText={errors.checkup_type}
                 required
                 variant="outlined"
-                InputLabelProps={{ shrink: true }}
-                inputProps={{ min: getCurrentDateTime() }}
+                size="medium"
+                className="search-field"
+                placeholder="e.g., General Checkup, Consultation"
               />
             </Grid>
             
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
+              <FormControl fullWidth size="medium">
                 <InputLabel>Priority Level</InputLabel>
                 <Select
                   name="priority"
                   value={formData.priority}
                   onChange={handleChange}
                   label="Priority Level"
+                  variant="outlined"
+                  className="search-field"
                 >
-                  <MenuItem value="low">Low</MenuItem>
-                  <MenuItem value="normal">Normal</MenuItem>
-                  <MenuItem value="high">High</MenuItem>
-                  <MenuItem value="emergency">Emergency</MenuItem>
+                  <MenuItem value={0}>Normal</MenuItem>
+                  <MenuItem value={1}>Urgent</MenuItem>
+                  <MenuItem value={2}>Emergency</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -263,50 +340,61 @@ const PatientRegistration = () => {
                 multiline
                 rows={3}
                 variant="outlined"
+                size="medium"
+                className="search-field"
                 placeholder="Describe the patient's symptoms or reason for the appointment..."
               />
             </Grid>
 
-            <Grid item xs={12}>
-              <Divider className="my-4" />
-            </Grid>
-
             {/* Emergency Contact */}
             <Grid item xs={12}>
-              <Typography variant="h6" className="font-semibold text-gray-700 mb-3">
-                Emergency Contact (Optional)
-              </Typography>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Emergency Contact Name"
-                name="emergencyContact"
-                value={formData.emergencyContact}
-                onChange={handleChange}
-                variant="outlined"
-              />
+              <Box className="bg-orange-50 rounded-xl p-4 mb-6 mt-8">
+                <Typography variant="h5" className="font-semibold text-orange-800 mb-2">
+                  Emergency Contact (Optional)
+                </Typography>
+                <Typography variant="body2" className="text-orange-700">
+                  Additional contact information for emergencies
+                </Typography>
+              </Box>
             </Grid>
             
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
                 label="Emergency Contact Phone"
-                name="emergencyPhone"
-                value={formData.emergencyPhone}
+                name="emergency_contact"
+                value={formData.emergency_contact}
                 onChange={handleChange}
                 variant="outlined"
+                size="medium"
+                className="search-field"
+              />
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Estimated Wait Time (minutes)"
+                name="estimated_wait_time"
+                type="number"
+                value={formData.estimated_wait_time}
+                onChange={handleChange}
+                variant="outlined"
+                size="medium"
+                className="search-field"
+                inputProps={{ min: 0, max: 480 }}
               />
             </Grid>
           </Grid>
 
-          <Box className="flex justify-end space-x-4 mt-8">
+          {/* Action Buttons */}
+          <Box className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 mt-10">
             <Button
               variant="outlined"
               onClick={handleClear}
               startIcon={<ClearOutlined />}
-              className="px-6"
+              className="btn-secondary"
+              size="large"
             >
               Clear Form
             </Button>
@@ -315,14 +403,15 @@ const PatientRegistration = () => {
               variant="contained"
               disabled={isLoading}
               startIcon={isLoading ? <CircularProgress size={20} /> : <SaveOutlined />}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6"
+              className="btn-primary"
+              size="large"
             >
-              {isLoading ? 'Adding Patient...' : 'Add Patient'}
+              {isLoading ? 'Registering Patient...' : 'Register Patient'}
             </Button>
           </Box>
         </form>
       </Paper>
-    </Container>
+    </Box>
   )
 }
 

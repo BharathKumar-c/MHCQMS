@@ -37,6 +37,18 @@ export const addPatient = createAsyncThunk(
   }
 )
 
+export const registerPatientWithQueue = createAsyncThunk(
+  'patients/registerPatientWithQueue',
+  async (registrationData, { rejectWithValue }) => {
+    try {
+      const response = await patientService.registerPatientWithQueue(registrationData)
+      return response
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to register patient with queue')
+    }
+  }
+)
+
 export const updatePatient = createAsyncThunk(
   'patients/updatePatient',
   async ({ id, patientData }, { rejectWithValue }) => {
@@ -128,6 +140,12 @@ const patientSlice = createSlice({
       // Add patient
       .addCase(addPatient.fulfilled, (state, action) => {
         state.patients.push(action.payload)
+      })
+      
+      // Register patient with queue
+      .addCase(registerPatientWithQueue.fulfilled, (state, action) => {
+        state.patients.push(action.payload.patient)
+        // You might want to also update queue state here if you have it
       })
       
       // Update patient

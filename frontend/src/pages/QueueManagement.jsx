@@ -124,6 +124,16 @@ const QueueManagement = () => {
     }
   }
 
+  const getPriorityChipClass = (priority) => {
+    switch (priority) {
+      case 'emergency': return 'chip-emergency'
+      case 'high': return 'chip-high'
+      case 'normal': return 'chip-normal'
+      case 'low': return 'chip-low'
+      default: return 'chip-normal'
+    }
+  }
+
   const getPriorityIcon = (priority) => {
     switch (priority) {
       case 'emergency': return '🚨'
@@ -143,143 +153,158 @@ const QueueManagement = () => {
   }
 
   return (
-    <Container maxWidth="xl">
-      <Box className="mb-6">
-        <Typography variant="h4" component="h1" className="font-bold text-gray-800 mb-2">
+    <Box className="space-y-8">
+      {/* Header Section */}
+      <Box className="text-center md:text-left">
+        <Typography variant="h3" component="h1" className="font-bold text-gray-800 mb-3">
           Queue Management
         </Typography>
-        <Typography variant="body1" className="text-gray-600">
+        <Typography variant="h6" className="text-gray-600 font-normal">
           Manage patient queue, update status, and handle appointments
         </Typography>
       </Box>
 
       {error && (
-        <Alert severity="error" className="mb-6">
+        <Alert severity="error" className="content-spacing">
           {error}
         </Alert>
       )}
 
-      {/* Search and Stats */}
-      <Box className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
-        <Box className="flex items-center space-x-4">
-          <TextField
-            placeholder="Search patients..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchOutlined />
-                </InputAdornment>
-              ),
-            }}
-            className="w-64"
-            size="small"
-          />
-          <Chip 
-            label={`${filteredPatients.length} patients in queue`}
-            color="primary"
-            variant="outlined"
-          />
-        </Box>
-        
-        <Box className="flex space-x-2">
-          <Chip 
-            label={`${patients.filter(p => p.priority === 'emergency').length} Emergency`}
-            color="error"
-            size="small"
-          />
-          <Chip 
-            label={`${patients.filter(p => p.priority === 'high').length} High Priority`}
-            color="warning"
-            size="small"
-          />
+      {/* Search and Stats Section */}
+      <Box className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+        <Box className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
+          <Box className="flex items-center space-x-4">
+            <TextField
+              placeholder="Search patients by name, contact, or priority..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchOutlined className="text-gray-400" />
+                  </InputAdornment>
+                ),
+              }}
+              className="search-field w-80"
+              size="medium"
+              variant="outlined"
+            />
+            <Chip 
+              label={`${filteredPatients.length} patients in queue`}
+              color="primary"
+              variant="outlined"
+              className="font-medium"
+            />
+          </Box>
+          
+          <Box className="flex space-x-3">
+            <Chip 
+              label={`${patients.filter(p => p.priority === 'emergency').length} Emergency`}
+              color="error"
+              size="medium"
+              className="font-medium"
+            />
+            <Chip 
+              label={`${patients.filter(p => p.priority === 'high').length} High Priority`}
+              color="warning"
+              size="medium"
+              className="font-medium"
+            />
+          </Box>
         </Box>
       </Box>
 
       {/* Patients Table */}
-      <Paper elevation={2}>
+      <Paper elevation={0} className="table-container">
         <TableContainer>
           <Table>
             <TableHead>
-              <TableRow className="bg-gray-50">
-                <TableCell className="font-semibold">Patient Info</TableCell>
-                <TableCell className="font-semibold">Contact</TableCell>
-                <TableCell className="font-semibold">Appointment</TableCell>
-                <TableCell className="font-semibold">Priority</TableCell>
-                <TableCell className="font-semibold">Status</TableCell>
-                <TableCell className="font-semibold">Actions</TableCell>
+              <TableRow className="table-header">
+                <TableCell className="table-header">Patient Info</TableCell>
+                <TableCell className="table-header">Contact</TableCell>
+                <TableCell className="table-header">Appointment</TableCell>
+                <TableCell className="table-header">Priority</TableCell>
+                <TableCell className="table-header">Status</TableCell>
+                <TableCell className="table-header">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredPatients.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                    No patients found in queue
+                  <TableCell colSpan={6} className="text-center py-12 text-gray-500">
+                    <Box className="text-center">
+                      <Typography variant="h6" className="text-gray-400 mb-2">
+                        No patients found in queue
+                      </Typography>
+                      <Typography variant="body2" className="text-gray-400">
+                        Try adjusting your search criteria
+                      </Typography>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredPatients.map((patient) => (
-                  <TableRow key={patient.id} className="hover:bg-gray-50">
-                    <TableCell>
+                  <TableRow key={patient.id} className="table-row">
+                    <TableCell className="table-cell">
                       <Box>
-                        <Typography variant="subtitle1" className="font-medium">
+                        <Typography variant="subtitle1" className="font-semibold text-gray-800 mb-2">
                           {patient.name}
                         </Typography>
-                        <Box className="flex items-center space-x-2 text-sm text-gray-600">
-                          <PersonOutline fontSize="small" />
+                        <Box className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+                          <PersonOutline fontSize="small" className="text-gray-400" />
                           <span>{patient.age} years • {patient.gender}</span>
                         </Box>
                         {patient.address && (
-                          <Box className="flex items-center space-x-2 text-sm text-gray-600 mt-1">
-                            <LocationOnOutlined fontSize="small" />
+                          <Box className="flex items-center space-x-2 text-sm text-gray-600">
+                            <LocationOnOutlined fontSize="small" className="text-gray-400" />
                             <span className="truncate max-w-48">{patient.address}</span>
                           </Box>
                         )}
                       </Box>
                     </TableCell>
                     
-                    <TableCell>
+                    <TableCell className="table-cell">
                       <Box className="flex items-center space-x-2">
-                        <PhoneOutlined fontSize="small" className="text-gray-500" />
-                        <Typography variant="body2">{patient.contact}</Typography>
+                        <PhoneOutlined fontSize="small" className="text-gray-400" />
+                        <Typography variant="body2" className="font-medium">{patient.contact}</Typography>
                       </Box>
                     </TableCell>
                     
-                    <TableCell>
+                    <TableCell className="table-cell">
                       <Box className="flex items-center space-x-2">
-                        <ScheduleOutlined fontSize="small" className="text-gray-500" />
-                        <Typography variant="body2">
+                        <ScheduleOutlined fontSize="small" className="text-gray-400" />
+                        <Typography variant="body2" className="font-medium">
                           {new Date(patient.appointmentTime).toLocaleString()}
                         </Typography>
                       </Box>
                     </TableCell>
                     
-                    <TableCell>
+                    <TableCell className="table-cell">
                       <Chip
                         label={`${getPriorityIcon(patient.priority)} ${patient.priority}`}
-                        color={getPriorityColor(patient.priority)}
+                        className={`${getPriorityChipClass(patient.priority)} capitalize`}
                         size="small"
-                        className="capitalize"
                       />
                     </TableCell>
                     
-                    <TableCell>
+                    <TableCell className="table-cell">
                       <Chip
                         label={patient.isServed ? 'Served' : 'Waiting'}
                         color={patient.isServed ? 'success' : 'warning'}
                         size="small"
+                        className="font-medium"
                       />
                     </TableCell>
                     
-                    <TableCell>
-                      <Box className="flex space-x-1">
+                    <TableCell className="table-cell">
+                      <Box className="flex space-x-2">
                         {!patient.isServed && (
                           <Tooltip title="Mark as Served">
                             <IconButton
-                              size="small"
+                              size="medium"
                               color="success"
                               onClick={() => handleMarkServed(patient.id)}
+                              className="hover:bg-green-50"
                             >
                               <CheckCircleOutlined />
                             </IconButton>
@@ -288,9 +313,10 @@ const QueueManagement = () => {
                         
                         <Tooltip title="Edit Patient">
                           <IconButton
-                            size="small"
+                            size="medium"
                             color="primary"
                             onClick={() => handleEdit(patient)}
+                            className="hover:bg-blue-50"
                           >
                             <EditOutlined />
                           </IconButton>
@@ -298,9 +324,10 @@ const QueueManagement = () => {
                         
                         <Tooltip title="Delete Patient">
                           <IconButton
-                            size="small"
+                            size="medium"
                             color="error"
                             onClick={() => setDeleteDialog({ open: true, patient })}
+                            className="hover:bg-red-50"
                           >
                             <DeleteOutlined />
                           </IconButton>
@@ -316,15 +343,27 @@ const QueueManagement = () => {
       </Paper>
 
       {/* Edit Dialog */}
-      <Dialog open={editDialog.open} onClose={() => setEditDialog({ open: false, patient: null })} maxWidth="md" fullWidth>
-        <DialogTitle>Edit Patient Information</DialogTitle>
-        <DialogContent>
-          <Box className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+      <Dialog 
+        open={editDialog.open} 
+        onClose={() => setEditDialog({ open: false, patient: null })} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          className: "rounded-xl"
+        }}
+      >
+        <DialogTitle className="text-xl font-semibold text-gray-800 pb-4">
+          Edit Patient Information
+        </DialogTitle>
+        <DialogContent className="dialog-content">
+          <Box className="form-grid">
             <TextField
               label="Name"
               value={editForm.name || ''}
               onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
               fullWidth
+              variant="outlined"
+              size="medium"
             />
             <TextField
               label="Age"
@@ -332,13 +371,16 @@ const QueueManagement = () => {
               value={editForm.age || ''}
               onChange={(e) => setEditForm({ ...editForm, age: e.target.value })}
               fullWidth
+              variant="outlined"
+              size="medium"
             />
-            <FormControl fullWidth>
+            <FormControl fullWidth size="medium">
               <InputLabel>Gender</InputLabel>
               <Select
                 value={editForm.gender || ''}
                 onChange={(e) => setEditForm({ ...editForm, gender: e.target.value })}
                 label="Gender"
+                variant="outlined"
               >
                 <MenuItem value="male">Male</MenuItem>
                 <MenuItem value="female">Female</MenuItem>
@@ -350,12 +392,16 @@ const QueueManagement = () => {
               value={editForm.contact || ''}
               onChange={(e) => setEditForm({ ...editForm, contact: e.target.value })}
               fullWidth
+              variant="outlined"
+              size="medium"
             />
             <TextField
               label="Address"
               value={editForm.address || ''}
               onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
               fullWidth
+              variant="outlined"
+              size="medium"
               multiline
               rows={2}
             />
@@ -365,14 +411,17 @@ const QueueManagement = () => {
               value={editForm.appointmentTime || ''}
               onChange={(e) => setEditForm({ ...editForm, appointmentTime: e.target.value })}
               fullWidth
+              variant="outlined"
+              size="medium"
               InputLabelProps={{ shrink: true }}
             />
-            <FormControl fullWidth>
+            <FormControl fullWidth size="medium">
               <InputLabel>Priority</InputLabel>
               <Select
                 value={editForm.priority || ''}
                 onChange={(e) => setEditForm({ ...editForm, priority: e.target.value })}
                 label="Priority"
+                variant="outlined"
               >
                 <MenuItem value="low">Low</MenuItem>
                 <MenuItem value="normal">Normal</MenuItem>
@@ -385,39 +434,64 @@ const QueueManagement = () => {
               value={editForm.symptoms || ''}
               onChange={(e) => setEditForm({ ...editForm, symptoms: e.target.value })}
               fullWidth
+              variant="outlined"
+              size="medium"
               multiline
               rows={3}
             />
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditDialog({ open: false, patient: null })}>
+        <DialogActions className="p-6 pt-0">
+          <Button 
+            onClick={() => setEditDialog({ open: false, patient: null })}
+            className="btn-secondary"
+          >
             Cancel
           </Button>
-          <Button onClick={handleEditSubmit} variant="contained" color="primary">
+          <Button 
+            onClick={handleEditSubmit} 
+            variant="contained" 
+            className="btn-primary"
+          >
             Update Patient
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, patient: null })}>
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete {deleteDialog.patient?.name}? This action cannot be undone.
+      <Dialog 
+        open={deleteDialog.open} 
+        onClose={() => setDeleteDialog({ open: false, patient: null })}
+        PaperProps={{
+          className: "rounded-xl"
+        }}
+      >
+        <DialogTitle className="text-xl font-semibold text-gray-800">
+          Confirm Delete
+        </DialogTitle>
+        <DialogContent className="dialog-content">
+          <Typography className="text-gray-700">
+            Are you sure you want to delete <strong>{deleteDialog.patient?.name}</strong>? This action cannot be undone.
           </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialog({ open: false, patient: null })}>
+        <DialogActions className="p-6 pt-0">
+          <Button 
+            onClick={() => setDeleteDialog({ open: false, patient: null })}
+            className="btn-secondary"
+          >
             Cancel
           </Button>
-          <Button onClick={handleDelete} color="error" variant="contained">
+          <Button 
+            onClick={handleDelete} 
+            color="error" 
+            variant="contained"
+            className="bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+          >
             Delete
           </Button>
         </DialogActions>
       </Dialog>
-    </Container>
+    </Box>
   )
 }
 

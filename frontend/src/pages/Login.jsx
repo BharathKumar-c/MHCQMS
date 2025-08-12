@@ -53,72 +53,78 @@ const Login = () => {
   }
 
   return (
-    <Container maxWidth="sm" className="min-h-screen flex items-center justify-center">
-      <Paper elevation={3} className="p-8 w-full">
-        <Box className="text-center mb-8">
-          <LockOutlined className="text-6xl text-blue-600 mb-4" />
-          <Typography variant="h4" component="h1" className="font-bold text-gray-800 mb-2">
-            MHCQMS Login
-          </Typography>
-          <Typography variant="body1" className="text-gray-600">
-            Sign in to access the patient queue management system
-          </Typography>
-        </Box>
+    <Box className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <Container maxWidth="sm">
+        <Paper elevation={0} className="card p-8 md:p-12">
+          <Box className="text-center mb-10">
+            <Box className="inline-flex items-center justify-center w-24 h-24 bg-blue-100 rounded-full mb-6">
+              <LockOutlined className="text-5xl text-blue-600" />
+            </Box>
+            <Typography variant="h3" component="h1" className="font-bold text-gray-800 mb-3">
+              MHCQMS Login
+            </Typography>
+            <Typography variant="h6" className="text-gray-600 font-normal">
+              Sign in to access the patient queue management system
+            </Typography>
+          </Box>
 
-        {error && (
-          <Alert severity="error" className="mb-4">
-            {error}
-          </Alert>
-        )}
+          {error && (
+            <Alert severity="error" className="mb-6">
+              {error}
+            </Alert>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <TextField
-            fullWidth
-            label="Username"
-            name="username"
-            type="text"
-            value={credentials.username}
-            onChange={handleChange}
-            required
-            variant="outlined"
-            className="mb-4"
-          />
-          
-          <TextField
-            fullWidth
-            label="Password"
-            name="password"
-            type="password"
-            value={credentials.password}
-            onChange={handleChange}
-            required
-            variant="outlined"
-            className="mb-6"
-          />
-          
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            size="large"
-            disabled={isLoading}
-            className="bg-blue-600 hover:bg-blue-700 text-white py-3"
-          >
-            {isLoading ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : (
-              'Sign In'
-            )}
-          </Button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <TextField
+              fullWidth
+              label="Username"
+              name="username"
+              type="text"
+              value={credentials.username}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              size="large"
+              className="search-field"
+            />
+            
+            <TextField
+              fullWidth
+              label="Password"
+              name="password"
+              type="password"
+              value={credentials.password}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              size="large"
+              className="search-field"
+            />
+            
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              size="large"
+              disabled={isLoading}
+              className="btn-primary py-4 text-lg font-semibold"
+            >
+              {isLoading ? (
+                <CircularProgress size={28} color="inherit" />
+              ) : (
+                'Sign In'
+              )}
+            </Button>
+          </form>
 
-        <Box className="mt-6 text-center">
-          <Typography variant="body2" className="text-gray-500">
-            Demo Credentials: admin / password123
-          </Typography>
-        </Box>
-      </Paper>
-    </Container>
+          <Box className="mt-8 text-center">
+            <Typography variant="body2" className="text-gray-500 font-medium">
+              Demo Credentials: admin / password123
+            </Typography>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   )
 }
 

@@ -11,6 +11,11 @@ export const patientService = {
     return response.data
   },
 
+  async registerPatientWithQueue(registrationData) {
+    const response = await api.post('/patients/register', registrationData)
+    return response.data
+  },
+
   async updatePatient(id, patientData) {
     const response = await api.put(`/patients/${id}`, patientData)
     return response.data

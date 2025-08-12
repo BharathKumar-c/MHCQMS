@@ -118,13 +118,13 @@ const Reports = () => {
     document.body.removeChild(link)
   }
 
-  const getPriorityColor = (priority) => {
+  const getPriorityChipClass = (priority) => {
     switch (priority) {
-      case 'emergency': return 'error'
-      case 'high': return 'warning'
-      case 'normal': return 'primary'
-      case 'low': return 'default'
-      default: return 'default'
+      case 'emergency': return 'chip-emergency'
+      case 'high': return 'chip-high'
+      case 'normal': return 'chip-normal'
+      case 'low': return 'chip-low'
+      default: return 'chip-normal'
     }
   }
 
@@ -161,91 +161,100 @@ const Reports = () => {
   }
 
   return (
-    <Container maxWidth="xl">
-      <Box className="mb-6">
-        <Typography variant="h4" component="h1" className="font-bold text-gray-800 mb-2">
+    <Box className="space-y-8">
+      {/* Header Section */}
+      <Box className="text-center md:text-left">
+        <Typography variant="h3" component="h1" className="font-bold text-gray-800 mb-3">
           Reports & Analytics
         </Typography>
-        <Typography variant="body1" className="text-gray-600">
+        <Typography variant="h6" className="text-gray-600 font-normal">
           View completed checkups and generate comprehensive reports
         </Typography>
       </Box>
 
       {error && (
-        <Alert severity="error" className="mb-6">
+        <Alert severity="error" className="content-spacing">
           {error}
         </Alert>
       )}
 
       {/* Statistics Cards */}
-      <Grid container spacing={3} className="mb-6">
+      <Grid container spacing={4} className="section-spacing">
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
+          <Card className="stat-card">
+            <CardContent className="p-6">
               <Box className="flex items-center justify-between">
-                <Box>
-                  <Typography variant="h4" component="div" className="font-bold text-blue-600">
+                <Box className="flex-1">
+                  <Typography variant="h3" component="div" className="font-bold text-blue-600 mb-2">
                     {stats.total}
                   </Typography>
-                  <Typography variant="h6" color="textSecondary">
+                  <Typography variant="h6" color="textSecondary" className="font-semibold">
                     Total Completed
                   </Typography>
                 </Box>
-                <CheckCircleOutlined className="text-4xl text-blue-600" />
+                <Box className="p-4 rounded-2xl bg-blue-100 ml-4">
+                  <CheckCircleOutlined className="text-4xl text-blue-600" />
+                </Box>
               </Box>
             </CardContent>
           </Card>
         </Grid>
         
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
+          <Card className="stat-card">
+            <CardContent className="p-6">
               <Box className="flex items-center justify-between">
-                <Box>
-                  <Typography variant="h4" component="div" className="font-bold text-green-600">
+                <Box className="flex-1">
+                  <Typography variant="h3" component="div" className="font-bold text-green-600 mb-2">
                     {stats.avgWaitTime}
                   </Typography>
-                  <Typography variant="h6" color="textSecondary">
+                  <Typography variant="h6" color="textSecondary" className="font-semibold">
                     Avg Wait Time (min)
                   </Typography>
                 </Box>
-                <ScheduleOutlined className="text-4xl text-green-600" />
+                <Box className="p-4 rounded-2xl bg-green-100 ml-4">
+                  <ScheduleOutlined className="text-4xl text-green-600" />
+                </Box>
               </Box>
             </CardContent>
           </Card>
         </Grid>
         
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
+          <Card className="stat-card">
+            <CardContent className="p-6">
               <Box className="flex items-center justify-between">
-                <Box>
-                  <Typography variant="h4" component="div" className="font-bold text-orange-600">
+                <Box className="flex-1">
+                  <Typography variant="h3" component="div" className="font-bold text-orange-600 mb-2">
                     {stats.priorityCounts.high || 0}
                   </Typography>
-                  <Typography variant="h6" color="textSecondary">
+                  <Typography variant="h6" color="textSecondary" className="font-semibold">
                     High Priority
                   </Typography>
                 </Box>
-                <TrendingUpOutlined className="text-4xl text-orange-600" />
+                <Box className="p-4 rounded-2xl bg-orange-100 ml-4">
+                  <TrendingUpOutlined className="text-4xl text-orange-600" />
+                </Box>
               </Box>
             </CardContent>
           </Card>
         </Grid>
         
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
+          <Card className="stat-card">
+            <CardContent className="p-6">
               <Box className="flex items-center justify-between">
-                <Box>
-                  <Typography variant="h4" component="div" className="font-bold text-red-600">
+                <Box className="flex-1">
+                  <Typography variant="h3" component="div" className="font-bold text-red-600 mb-2">
                     {stats.priorityCounts.emergency || 0}
                   </Typography>
-                  <Typography variant="h6" color="textSecondary">
+                  <Typography variant="h6" color="textSecondary" className="font-semibold">
                     Emergency Cases
                   </Typography>
                 </Box>
-                <AssessmentOutlined className="text-4xl text-red-600" />
+                <Box className="p-4 rounded-2xl bg-red-100 ml-4">
+                  <AssessmentOutlined className="text-4xl text-red-600" />
+                </Box>
               </Box>
             </CardContent>
           </Card>
@@ -253,33 +262,37 @@ const Reports = () => {
       </Grid>
 
       {/* Filters and Export */}
-      <Paper elevation={2} className="p-4 mb-6">
-        <Grid container spacing={3} alignItems="center">
+      <Paper elevation={0} className="card p-6">
+        <Grid container spacing={4} alignItems="center">
           <Grid item xs={12} md={4}>
             <TextField
-              placeholder="Search patients..."
+              placeholder="Search patients by name or contact..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchOutlined />
+                    <SearchOutlined className="text-gray-400" />
                   </InputAdornment>
                 ),
               }}
               fullWidth
-              size="small"
+              size="medium"
+              variant="outlined"
+              className="search-field"
             />
           </Grid>
           
           <Grid item xs={12} md={3}>
-            <FormControl fullWidth size="small">
+            <FormControl fullWidth size="medium">
               <InputLabel>Date Range</InputLabel>
               <Select
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
                 label="Date Range"
-                startAdornment={<FilterListOutlined />}
+                variant="outlined"
+                className="search-field"
+                startAdornment={<FilterListOutlined className="text-gray-400" />}
               >
                 <MenuItem value="today">Today</MenuItem>
                 <MenuItem value="week">Last 7 Days</MenuItem>
@@ -290,12 +303,14 @@ const Reports = () => {
           </Grid>
           
           <Grid item xs={12} md={3}>
-            <FormControl fullWidth size="small">
+            <FormControl fullWidth size="medium">
               <InputLabel>Priority</InputLabel>
               <Select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
                 label="Priority"
+                variant="outlined"
+                className="search-field"
               >
                 <MenuItem value="all">All Priorities</MenuItem>
                 <MenuItem value="low">Low</MenuItem>
@@ -312,7 +327,8 @@ const Reports = () => {
               startIcon={<DownloadOutlined />}
               onClick={exportToCSV}
               fullWidth
-              className="bg-green-600 hover:bg-green-700"
+              className="btn-primary bg-green-600 hover:bg-green-700"
+              size="large"
             >
               Export CSV
             </Button>
@@ -321,88 +337,96 @@ const Reports = () => {
       </Paper>
 
       {/* Results Summary */}
-      <Box className="mb-4">
+      <Box className="bg-gray-50 rounded-xl p-4">
         <Typography variant="h6" className="font-semibold text-gray-700">
           Results: {filteredPatients.length} completed checkups found
         </Typography>
       </Box>
 
       {/* Completed Patients Table */}
-      <Paper elevation={2}>
+      <Paper elevation={0} className="table-container">
         <TableContainer>
           <Table>
             <TableHead>
-              <TableRow className="bg-gray-50">
-                <TableCell className="font-semibold">Patient Details</TableCell>
-                <TableCell className="font-semibold">Contact</TableCell>
-                <TableCell className="font-semibold">Priority</TableCell>
-                <TableCell className="font-semibold">Appointment Time</TableCell>
-                <TableCell className="font-semibold">Served At</TableCell>
-                <TableCell className="font-semibold">Wait Time</TableCell>
-                <TableCell className="font-semibold">Status</TableCell>
+              <TableRow className="table-header">
+                <TableCell className="table-header">Patient Details</TableCell>
+                <TableCell className="table-header">Contact</TableCell>
+                <TableCell className="table-header">Priority</TableCell>
+                <TableCell className="table-header">Appointment Time</TableCell>
+                <TableCell className="table-header">Served At</TableCell>
+                <TableCell className="table-header">Wait Time</TableCell>
+                <TableCell className="table-header">Status</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredPatients.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                    No completed checkups found for the selected criteria
+                  <TableCell colSpan={7} className="text-center py-12 text-gray-500">
+                    <Box className="text-center">
+                      <Typography variant="h6" className="text-gray-400 mb-2">
+                        No completed checkups found
+                      </Typography>
+                      <Typography variant="body2" className="text-gray-400">
+                        Try adjusting your search criteria or date range
+                      </Typography>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredPatients.map((patient) => {
                   const waitTime = calculateWaitTime(patient.appointmentTime, patient.servedAt)
                   return (
-                    <TableRow key={patient.id} className="hover:bg-gray-50">
-                      <TableCell>
+                    <TableRow key={patient.id} className="table-row">
+                      <TableCell className="table-cell">
                         <Box>
-                          <Typography variant="subtitle1" className="font-medium">
+                          <Typography variant="subtitle1" className="font-semibold text-gray-800 mb-1">
                             {patient.name}
                           </Typography>
-                          <Typography variant="body2" color="textSecondary">
+                          <Typography variant="body2" color="textSecondary" className="text-sm">
                             {patient.age} years • {patient.gender}
                           </Typography>
                         </Box>
                       </TableCell>
                       
-                      <TableCell>
-                        <Typography variant="body2">{patient.contact}</Typography>
+                      <TableCell className="table-cell">
+                        <Typography variant="body2" className="font-medium">{patient.contact}</Typography>
                       </TableCell>
                       
-                      <TableCell>
+                      <TableCell className="table-cell">
                         <Chip
                           label={patient.priority}
-                          color={getPriorityColor(patient.priority)}
+                          className={`${getPriorityChipClass(patient.priority)} capitalize`}
                           size="small"
-                          className="capitalize"
                         />
                       </TableCell>
                       
-                      <TableCell>
-                        <Typography variant="body2">
+                      <TableCell className="table-cell">
+                        <Typography variant="body2" className="font-medium">
                           {new Date(patient.appointmentTime).toLocaleString()}
                         </Typography>
                       </TableCell>
                       
-                      <TableCell>
-                        <Typography variant="body2">
+                      <TableCell className="table-cell">
+                        <Typography variant="body2" className="font-medium">
                           {new Date(patient.servedAt).toLocaleString()}
                         </Typography>
                       </TableCell>
                       
-                      <TableCell>
+                      <TableCell className="table-cell">
                         <Chip
                           label={`${waitTime} min`}
                           color={waitTime <= 15 ? 'success' : waitTime <= 30 ? 'warning' : 'error'}
                           size="small"
+                          className="font-medium"
                         />
                       </TableCell>
                       
-                      <TableCell>
+                      <TableCell className="table-cell">
                         <Chip
                           label="Completed"
                           color="success"
                           size="small"
+                          className="font-medium"
                         />
                       </TableCell>
                     </TableRow>
@@ -415,15 +439,15 @@ const Reports = () => {
       </Paper>
 
       {/* Export Summary */}
-      <Box className="mt-6 text-center">
-        <Typography variant="body2" color="textSecondary" className="mb-2">
+      <Box className="bg-gray-50 rounded-xl p-6 text-center">
+        <Typography variant="body2" color="textSecondary" className="mb-2 font-medium">
           Report generated on {new Date().toLocaleString()}
         </Typography>
         <Typography variant="body2" color="textSecondary">
           Filtered by: {dateFilter} • Priority: {priorityFilter === 'all' ? 'All' : priorityFilter}
         </Typography>
       </Box>
-    </Container>
+    </Box>
   )
 }
 
