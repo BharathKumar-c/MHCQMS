@@ -144,7 +144,10 @@ const patientSlice = createSlice({
       
       // Register patient with queue
       .addCase(registerPatientWithQueue.fulfilled, (state, action) => {
-        state.patients.push(action.payload.patient)
+        // The backend returns {patient: {...}, queue: {...}}
+        if (action.payload.patient) {
+          state.patients.push(action.payload.patient)
+        }
         // You might want to also update queue state here if you have it
       })
       
@@ -167,7 +170,10 @@ const patientSlice = createSlice({
         if (index !== -1) {
           state.patients[index] = action.payload
         }
+        // Move to completed patients
         state.completedPatients.push(action.payload)
+        // Remove from active patients
+        state.patients = state.patients.filter(p => p.id !== action.payload.id)
       })
       
       // Fetch completed patients

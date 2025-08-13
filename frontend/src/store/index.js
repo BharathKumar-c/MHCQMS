@@ -1,14 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
-
-// Import reducers here when you create them
-// import authReducer from './slices/authSlice';
-// import queueReducer from './slices/queueSlice';
+import authReducer from '../features/authSlice';
+import patientReducer from '../features/patientSlice';
+import queueReducer from '../features/queueSlice';
 
 export const store = configureStore({
   reducer: {
-    // Add your reducers here
-    // auth: authReducer,
-    // queue: queueReducer,
+    auth: authReducer,
+    patients: patientReducer,
+    queue: queueReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

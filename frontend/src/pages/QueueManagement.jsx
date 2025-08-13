@@ -67,14 +67,14 @@ const QueueManagement = () => {
 
   const handleEdit = (patient) => {
     setEditForm({
-      name: patient.name,
-      age: patient.age,
+      first_name: patient.first_name,
+      last_name: patient.last_name,
+      date_of_birth: patient.date_of_birth,
       gender: patient.gender,
-      contact: patient.contact,
+      phone: patient.phone,
       address: patient.address,
-      appointmentTime: patient.appointmentTime,
-      priority: patient.priority,
-      symptoms: patient.symptoms,
+      email: patient.email,
+      medical_history: patient.medical_history,
     })
     setEditDialog({ open: true, patient })
   }
@@ -109,38 +109,44 @@ const QueueManagement = () => {
   }
 
   const filteredPatients = patients.filter(patient => 
-    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.contact.includes(searchTerm) ||
-    patient.priority.toLowerCase().includes(searchTerm.toLowerCase())
+    `${patient.first_name} ${patient.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    patient.phone?.includes(searchTerm) ||
+    patient.patient_id?.includes(searchTerm)
   )
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'emergency': return 'error'
-      case 'high': return 'warning'
-      case 'normal': return 'primary'
-      case 'low': return 'default'
+      case 2: return 'error'      // Emergency
+      case 1: return 'warning'    // Urgent
+      case 0: return 'primary'    // Normal
       default: return 'default'
     }
   }
 
   const getPriorityChipClass = (priority) => {
     switch (priority) {
-      case 'emergency': return 'chip-emergency'
-      case 'high': return 'chip-high'
-      case 'normal': return 'chip-normal'
-      case 'low': return 'chip-low'
+      case 2: return 'chip-emergency'  // Emergency
+      case 1: return 'chip-high'       // Urgent
+      case 0: return 'chip-normal'     // Normal
       default: return 'chip-normal'
     }
   }
 
   const getPriorityIcon = (priority) => {
     switch (priority) {
-      case 'emergency': return '🚨'
-      case 'high': return '⚠️'
-      case 'normal': return '📋'
-      case 'low': return '📝'
+      case 2: return '🚨'  // Emergency
+      case 1: return '⚠️'  // Urgent
+      case 0: return '📋'  // Normal
       default: return '📋'
+    }
+  }
+
+  const getPriorityLabel = (priority) => {
+    switch (priority) {
+      case 2: return 'Emergency'
+      case 1: return 'Urgent'
+      case 0: return 'Normal'
+      default: return 'Normal'
     }
   }
 
@@ -199,13 +205,13 @@ const QueueManagement = () => {
           
           <Box className="flex space-x-3">
             <Chip 
-              label={`${patients.filter(p => p.priority === 'emergency').length} Emergency`}
+              label={`${patients.filter(p => p.priority === 2).length} Emergency`}
               color="error"
               size="medium"
               className="font-medium"
             />
             <Chip 
-              label={`${patients.filter(p => p.priority === 'high').length} High Priority`}
+              label={`${patients.filter(p => p.priority === 1).length} High Priority`}
               color="warning"
               size="medium"
               className="font-medium"
@@ -248,11 +254,11 @@ const QueueManagement = () => {
                     <TableCell className="table-cell">
                       <Box>
                         <Typography variant="subtitle1" className="font-semibold text-gray-800 mb-2">
-                          {patient.name}
+                          {patient.first_name} {patient.last_name}
                         </Typography>
                         <Box className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
                           <PersonOutline fontSize="small" className="text-gray-400" />
-                          <span>{patient.age} years • {patient.gender}</span>
+                          <span>{patient.patient_id} • {patient.gender}</span>
                         </Box>
                         {patient.address && (
                           <Box className="flex items-center space-x-2 text-sm text-gray-600">
@@ -266,22 +272,27 @@ const QueueManagement = () => {
                     <TableCell className="table-cell">
                       <Box className="flex items-center space-x-2">
                         <PhoneOutlined fontSize="small" className="text-gray-400" />
-                        <Typography variant="body2" className="font-medium">{patient.contact}</Typography>
+                        <Typography variant="body2" className="font-medium">{patient.phone}</Typography>
                       </Box>
+                      {patient.email && (
+                        <Typography variant="body2" className="text-gray-500 text-sm">
+                          {patient.email}
+                        </Typography>
+                      )}
                     </TableCell>
                     
                     <TableCell className="table-cell">
                       <Box className="flex items-center space-x-2">
                         <ScheduleOutlined fontSize="small" className="text-gray-400" />
                         <Typography variant="body2" className="font-medium">
-                          {new Date(patient.appointmentTime).toLocaleString()}
+                          {new Date(patient.created_at).toLocaleString()}
                         </Typography>
                       </Box>
                     </TableCell>
                     
                     <TableCell className="table-cell">
                       <Chip
-                        label={`${getPriorityIcon(patient.priority)} ${patient.priority}`}
+                        label={`${getPriorityIcon(patient.priority)} ${getPriorityLabel(patient.priority)}`}
                         className={`${getPriorityChipClass(patient.priority)} capitalize`}
                         size="small"
                       />
@@ -289,8 +300,8 @@ const QueueManagement = () => {
                     
                     <TableCell className="table-cell">
                       <Chip
-                        label={patient.isServed ? 'Served' : 'Waiting'}
-                        color={patient.isServed ? 'success' : 'warning'}
+                        label="Waiting"
+                        color="warning"
                         size="small"
                         className="font-medium"
                       />
@@ -358,21 +369,30 @@ const QueueManagement = () => {
         <DialogContent className="dialog-content">
           <Box className="form-grid">
             <TextField
-              label="Name"
-              value={editForm.name || ''}
-              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+              label="First Name"
+              value={editForm.first_name || ''}
+              onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })}
               fullWidth
               variant="outlined"
               size="medium"
             />
             <TextField
-              label="Age"
-              type="number"
-              value={editForm.age || ''}
-              onChange={(e) => setEditForm({ ...editForm, age: e.target.value })}
+              label="Last Name"
+              value={editForm.last_name || ''}
+              onChange={(e) => setEditForm({ ...editForm, last_name: e.target.value })}
               fullWidth
               variant="outlined"
               size="medium"
+            />
+            <TextField
+              label="Date of Birth"
+              type="date"
+              value={editForm.date_of_birth || ''}
+              onChange={(e) => setEditForm({ ...editForm, date_of_birth: e.target.value })}
+              fullWidth
+              variant="outlined"
+              size="medium"
+              InputLabelProps={{ shrink: true }}
             />
             <FormControl fullWidth size="medium">
               <InputLabel>Gender</InputLabel>
@@ -388,9 +408,18 @@ const QueueManagement = () => {
               </Select>
             </FormControl>
             <TextField
-              label="Contact"
-              value={editForm.contact || ''}
-              onChange={(e) => setEditForm({ ...editForm, contact: e.target.value })}
+              label="Phone"
+              value={editForm.phone || ''}
+              onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+              fullWidth
+              variant="outlined"
+              size="medium"
+            />
+            <TextField
+              label="Email"
+              type="email"
+              value={editForm.email || ''}
+              onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
               fullWidth
               variant="outlined"
               size="medium"
@@ -406,33 +435,9 @@ const QueueManagement = () => {
               rows={2}
             />
             <TextField
-              label="Appointment Time"
-              type="datetime-local"
-              value={editForm.appointmentTime || ''}
-              onChange={(e) => setEditForm({ ...editForm, appointmentTime: e.target.value })}
-              fullWidth
-              variant="outlined"
-              size="medium"
-              InputLabelProps={{ shrink: true }}
-            />
-            <FormControl fullWidth size="medium">
-              <InputLabel>Priority</InputLabel>
-              <Select
-                value={editForm.priority || ''}
-                onChange={(e) => setEditForm({ ...editForm, priority: e.target.value })}
-                label="Priority"
-                variant="outlined"
-              >
-                <MenuItem value="low">Low</MenuItem>
-                <MenuItem value="normal">Normal</MenuItem>
-                <MenuItem value="high">High</MenuItem>
-                <MenuItem value="emergency">Emergency</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField
-              label="Symptoms"
-              value={editForm.symptoms || ''}
-              onChange={(e) => setEditForm({ ...editForm, symptoms: e.target.value })}
+              label="Medical History"
+              value={editForm.medical_history || ''}
+              onChange={(e) => setEditForm({ ...editForm, medical_history: e.target.value })}
               fullWidth
               variant="outlined"
               size="medium"
@@ -471,7 +476,7 @@ const QueueManagement = () => {
         </DialogTitle>
         <DialogContent className="dialog-content">
           <Typography className="text-gray-700">
-            Are you sure you want to delete <strong>{deleteDialog.patient?.name}</strong>? This action cannot be undone.
+            Are you sure you want to delete <strong>{deleteDialog.patient?.first_name} {deleteDialog.patient?.last_name}</strong>? This action cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions className="p-6 pt-0">

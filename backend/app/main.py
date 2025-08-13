@@ -11,6 +11,7 @@ from fastapi.openapi.utils import get_openapi
 # Import models to ensure they are available for migrations
 from app.models import User, Patient, Queue
 from app.core.config import settings
+from app.core.database import create_tables
 
 # Import API routers
 from app.api import auth_router, users_router, patients_router, queue_router
@@ -64,13 +65,23 @@ app = FastAPI(
     ]
 )
 
-# Configure CORS
+@app.on_event("startup")
+async def startup_event():
+    """Create database tables on startup"""
+    try:
+        create_tables()
+        print("✅ Database tables created successfully")
+    except Exception as e:
+        print(f"⚠️  Warning: Could not create database tables: {e}")
+
+# Configure CORS with more permissive settings for development
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Include API routers

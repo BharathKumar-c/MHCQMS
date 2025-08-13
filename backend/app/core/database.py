@@ -7,17 +7,22 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from .config import settings
 
+# Fix postgres:// URLs to postgresql:// (SQLAlchemy requirement)
+database_url = settings.database_url
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
 # Create database engine with SQLite and PostgreSQL support
-if settings.database_url.startswith("sqlite"):
+if database_url.startswith("sqlite"):
     engine = create_engine(
-        settings.database_url,
+        database_url,
         connect_args={"check_same_thread": False},
         echo=settings.debug
     )
 else:
     # PostgreSQL configuration
     engine = create_engine(
-        settings.database_url,
+        database_url,
         pool_pre_ping=True,
         pool_size=10,
         max_overflow=20,
@@ -37,3 +42,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def create_tables():
+    """Create all tables"""
+    Base.metadata.create_all(bind=engine)

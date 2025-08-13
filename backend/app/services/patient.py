@@ -132,3 +132,44 @@ class PatientService:
             existing = self.get_patient_by_patient_id(patient_id)
             if not existing:
                 return patient_id
+
+    def mark_patient_served(self, patient_id: int) -> Optional[Patient]:
+        """Mark a patient as served"""
+        db_patient = self.get_patient(patient_id)
+        if not db_patient:
+            return None
+        
+        # Update the patient's served status
+        from datetime import datetime
+        db_patient.updated_at = datetime.utcnow()
+        
+        # You might want to add a field to track if patient is served
+        # For now, we'll just update the timestamp
+        self.db.commit()
+        self.db.refresh(db_patient)
+        return db_patient
+
+    def get_completed_patients(self, skip: int = 0, limit: int = 100) -> List[Patient]:
+        """Get a list of completed/served patients"""
+        # This would need to be implemented based on your business logic
+        # For now, returning all patients (you might want to filter by some status)
+        return self.get_patients(skip=skip, limit=limit)
+
+    def get_patient_stats(self) -> dict:
+        """Get patient statistics"""
+        total_patients = self.db.query(Patient).count()
+        
+        # You might want to add more sophisticated stats based on your needs
+        stats = {
+            "total_patients": total_patients,
+            "total_in_queue": total_patients,  # This should be based on queue status
+            "total_served": 0,  # This should be based on served status
+            "average_wait_time": 0,  # This should be calculated from queue data
+            "priority_distribution": {
+                "normal": 0,
+                "urgent": 0,
+                "emergency": 0
+            }
+        }
+        
+        return stats

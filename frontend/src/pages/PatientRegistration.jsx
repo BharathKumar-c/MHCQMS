@@ -15,9 +15,19 @@ import {
   MenuItem,
   Alert,
   CircularProgress,
-  Divider
+  Divider,
+  useMediaQuery,
+  useTheme
 } from '@mui/material'
-import { PersonAddOutlined, SaveOutlined, ClearOutlined } from '@mui/icons-material'
+import { 
+  PersonAddOutlined, 
+  SaveOutlined, 
+  ClearOutlined,
+  PersonOutline,
+  Schedule,
+  Emergency,
+  ContactPhone
+} from '@mui/icons-material'
 import { registerPatientWithQueue } from '../features/patientSlice'
 
 const PatientRegistration = () => {
@@ -39,6 +49,8 @@ const PatientRegistration = () => {
   const [errors, setErrors] = useState({})
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const { isLoading, error } = useSelector((state) => state.patients)
 
   const handleChange = (e) => {
@@ -132,259 +144,281 @@ const PatientRegistration = () => {
     return `${year}-${month}-${day}`
   }
 
+  const FormSection = ({ title, description, icon, children, color = "blue" }) => (
+    <Grid item xs={12}>
+      <Box className={`bg-${color}-50/80 backdrop-blur-sm rounded-2xl p-6 mb-6 border border-${color}-200/50`}>
+        <Box className="flex items-center space-x-3 mb-4">
+          <Box className={`p-3 bg-${color}-100 rounded-xl`}>
+            {icon}
+          </Box>
+          <Box>
+            <Typography variant="h5" className={`font-semibold text-${color}-800 mb-1`}>
+              {title}
+            </Typography>
+            <Typography variant="body2" className={`text-${color}-700`}>
+              {description}
+            </Typography>
+          </Box>
+        </Box>
+        {children}
+      </Box>
+    </Grid>
+  )
+
   return (
-    <Box className="max-w-4xl mx-auto space-y-8">
+    <Box className="max-w-6xl mx-auto space-y-8 fade-in">
       {/* Header Section */}
       <Box className="text-center">
-        <Box className="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-6">
+        <Box className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl mb-6 shadow-lg">
           <PersonAddOutlined className="text-4xl text-blue-600" />
         </Box>
-        <Typography variant="h3" component="h1" className="font-bold text-gray-800 mb-3">
+        <Typography 
+          variant={isMobile ? "h4" : "h3"} 
+          component="h1" 
+          className="font-bold text-slate-800 mb-3 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"
+        >
           Patient Registration
         </Typography>
-        <Typography variant="h6" className="text-gray-600 font-normal">
+        <Typography 
+          variant={isMobile ? "body1" : "h6"} 
+          className="text-slate-600 font-normal"
+        >
           Add new patients to the queue management system
         </Typography>
       </Box>
 
       {error && (
-        <Alert severity="error" className="content-spacing">
+        <Alert severity="error" className="content-spacing slide-up">
           {error}
         </Alert>
       )}
 
       {/* Form Section */}
-      <Paper elevation={0} className="card p-8">
+      <Paper elevation={0} className="card p-8 slide-up" style={{ animationDelay: '200ms' }}>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={4}>
             {/* Basic Information */}
-            <Grid item xs={12}>
-              <Box className="bg-blue-50 rounded-xl p-4 mb-6">
-                <Typography variant="h5" className="font-semibold text-blue-800 mb-2">
-                  Basic Information
-                </Typography>
-                <Typography variant="body2" className="text-blue-700">
-                  Enter the patient's personal details
-                </Typography>
-              </Box>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="First Name"
-                name="first_name"
-                value={formData.first_name}
-                onChange={handleChange}
-                error={!!errors.first_name}
-                helperText={errors.first_name}
-                required
-                variant="outlined"
-                size="medium"
-                className="search-field"
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Last Name"
-                name="last_name"
-                value={formData.last_name}
-                onChange={handleChange}
-                error={!!errors.last_name}
-                helperText={errors.last_name}
-                required
-                variant="outlined"
-                size="medium"
-                className="search-field"
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Date of Birth"
-                name="date_of_birth"
-                type="date"
-                value={formData.date_of_birth}
-                onChange={handleChange}
-                error={!!errors.date_of_birth}
-                helperText={errors.date_of_birth}
-                required
-                variant="outlined"
-                size="medium"
-                className="search-field"
-                InputLabelProps={{ shrink: true }}
-                inputProps={{ max: getCurrentDate() }}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth required error={!!errors.gender} size="medium">
-                <InputLabel>Gender</InputLabel>
-                <Select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                  label="Gender"
-                  variant="outlined"
-                  className="search-field"
-                >
-                  <MenuItem value="male">Male</MenuItem>
-                  <MenuItem value="female">Female</MenuItem>
-                  <MenuItem value="other">Other</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Phone Number"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                error={!!errors.phone}
-                helperText={errors.phone}
-                required
-                variant="outlined"
-                size="medium"
-                className="search-field"
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Email Address"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                variant="outlined"
-                size="medium"
-                className="search-field"
-              />
-            </Grid>
-            
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Address"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                multiline
-                rows={2}
-                variant="outlined"
-                size="medium"
-                className="search-field"
-              />
-            </Grid>
+            <FormSection
+              title="Basic Information"
+              description="Enter the patient's personal details"
+              icon={<PersonOutline className="text-2xl text-blue-600" />}
+              color="blue"
+            >
+              <Grid container spacing={4}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="First Name"
+                    name="first_name"
+                    value={formData.first_name}
+                    onChange={handleChange}
+                    error={!!errors.first_name}
+                    helperText={errors.first_name}
+                    required
+                    variant="outlined"
+                    size="medium"
+                    className="search-field focus-ring"
+                  />
+                </Grid>
+                
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Last Name"
+                    name="last_name"
+                    value={formData.last_name}
+                    onChange={handleChange}
+                    error={!!errors.last_name}
+                    helperText={errors.last_name}
+                    required
+                    variant="outlined"
+                    size="medium"
+                    className="search-field focus-ring"
+                  />
+                </Grid>
+                
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Date of Birth"
+                    name="date_of_birth"
+                    type="date"
+                    value={formData.date_of_birth}
+                    onChange={handleChange}
+                    error={!!errors.date_of_birth}
+                    helperText={errors.date_of_birth}
+                    required
+                    variant="outlined"
+                    size="medium"
+                    className="search-field focus-ring"
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{ max: getCurrentDate() }}
+                  />
+                </Grid>
+                
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth required error={!!errors.gender} size="medium">
+                    <InputLabel>Gender</InputLabel>
+                    <Select
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleChange}
+                      label="Gender"
+                      variant="outlined"
+                      className="search-field focus-ring"
+                    >
+                      <MenuItem value="male">Male</MenuItem>
+                      <MenuItem value="female">Female</MenuItem>
+                      <MenuItem value="other">Other</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Phone Number"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    error={!!errors.phone}
+                    helperText={errors.phone}
+                    required
+                    variant="outlined"
+                    size="medium"
+                    className="search-field focus-ring"
+                  />
+                </Grid>
+                
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Email Address"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    variant="outlined"
+                    size="medium"
+                    className="search-field focus-ring"
+                  />
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    multiline
+                    rows={2}
+                    variant="outlined"
+                    size="medium"
+                    className="search-field focus-ring"
+                  />
+                </Grid>
+              </Grid>
+            </FormSection>
 
             {/* Appointment Details */}
-            <Grid item xs={12}>
-              <Box className="bg-green-50 rounded-xl p-4 mb-6 mt-8">
-                <Typography variant="h5" className="font-semibold text-green-800 mb-2">
-                  Appointment Details
-                </Typography>
-                <Typography variant="body2" className="text-green-700">
-                  Schedule and prioritize the appointment
-                </Typography>
-              </Box>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Checkup Type"
-                name="checkup_type"
-                value={formData.checkup_type}
-                onChange={handleChange}
-                error={!!errors.checkup_type}
-                helperText={errors.checkup_type}
-                required
-                variant="outlined"
-                size="medium"
-                className="search-field"
-                placeholder="e.g., General Checkup, Consultation"
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth size="medium">
-                <InputLabel>Priority Level</InputLabel>
-                <Select
-                  name="priority"
-                  value={formData.priority}
-                  onChange={handleChange}
-                  label="Priority Level"
-                  variant="outlined"
-                  className="search-field"
-                >
-                  <MenuItem value={0}>Normal</MenuItem>
-                  <MenuItem value={1}>Urgent</MenuItem>
-                  <MenuItem value={2}>Emergency</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Symptoms/Reason for Visit"
-                name="symptoms"
-                value={formData.symptoms}
-                onChange={handleChange}
-                multiline
-                rows={3}
-                variant="outlined"
-                size="medium"
-                className="search-field"
-                placeholder="Describe the patient's symptoms or reason for the appointment..."
-              />
-            </Grid>
+            <FormSection
+              title="Appointment Details"
+              description="Schedule and prioritize the appointment"
+              icon={<Schedule className="text-2xl text-emerald-600" />}
+              color="emerald"
+            >
+              <Grid container spacing={4}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Checkup Type"
+                    name="checkup_type"
+                    value={formData.checkup_type}
+                    onChange={handleChange}
+                    error={!!errors.checkup_type}
+                    helperText={errors.checkup_type}
+                    required
+                    variant="outlined"
+                    size="medium"
+                    className="search-field focus-ring"
+                    placeholder="e.g., General Checkup, Consultation"
+                  />
+                </Grid>
+                
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth size="medium">
+                    <InputLabel>Priority Level</InputLabel>
+                    <Select
+                      name="priority"
+                      value={formData.priority}
+                      onChange={handleChange}
+                      label="Priority Level"
+                      variant="outlined"
+                      className="search-field focus-ring"
+                    >
+                      <MenuItem value={0}>Normal</MenuItem>
+                      <MenuItem value={1}>Urgent</MenuItem>
+                      <MenuItem value={2}>Emergency</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Symptoms/Reason for Visit"
+                    name="symptoms"
+                    value={formData.symptoms}
+                    onChange={handleChange}
+                    multiline
+                    rows={3}
+                    variant="outlined"
+                    size="medium"
+                    className="search-field focus-ring"
+                    placeholder="Describe the patient's symptoms or reason for the appointment..."
+                  />
+                </Grid>
+              </Grid>
+            </FormSection>
 
             {/* Emergency Contact */}
-            <Grid item xs={12}>
-              <Box className="bg-orange-50 rounded-xl p-4 mb-6 mt-8">
-                <Typography variant="h5" className="font-semibold text-orange-800 mb-2">
-                  Emergency Contact (Optional)
-                </Typography>
-                <Typography variant="body2" className="text-orange-700">
-                  Additional contact information for emergencies
-                </Typography>
-              </Box>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Emergency Contact Phone"
-                name="emergency_contact"
-                value={formData.emergency_contact}
-                onChange={handleChange}
-                variant="outlined"
-                size="medium"
-                className="search-field"
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Estimated Wait Time (minutes)"
-                name="estimated_wait_time"
-                type="number"
-                value={formData.estimated_wait_time}
-                onChange={handleChange}
-                variant="outlined"
-                size="medium"
-                className="search-field"
-                inputProps={{ min: 0, max: 480 }}
-              />
-            </Grid>
+            <FormSection
+              title="Emergency Contact (Optional)"
+              description="Additional contact information for emergencies"
+              icon={<ContactPhone className="text-2xl text-orange-600" />}
+              color="orange"
+            >
+              <Grid container spacing={4}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Emergency Contact Phone"
+                    name="emergency_contact"
+                    value={formData.emergency_contact}
+                    onChange={handleChange}
+                    variant="outlined"
+                    size="medium"
+                    className="search-field focus-ring"
+                  />
+                </Grid>
+                
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Estimated Wait Time (minutes)"
+                    name="estimated_wait_time"
+                    type="number"
+                    value={formData.estimated_wait_time}
+                    onChange={handleChange}
+                    variant="outlined"
+                    size="medium"
+                    className="search-field focus-ring"
+                    inputProps={{ min: 0, max: 480 }}
+                  />
+                </Grid>
+              </Grid>
+            </FormSection>
           </Grid>
 
           {/* Action Buttons */}
@@ -393,7 +427,7 @@ const PatientRegistration = () => {
               variant="outlined"
               onClick={handleClear}
               startIcon={<ClearOutlined />}
-              className="btn-secondary"
+              className="btn-secondary focus-ring"
               size="large"
             >
               Clear Form
@@ -403,7 +437,7 @@ const PatientRegistration = () => {
               variant="contained"
               disabled={isLoading}
               startIcon={isLoading ? <CircularProgress size={20} /> : <SaveOutlined />}
-              className="btn-primary"
+              className="btn-primary focus-ring"
               size="large"
             >
               {isLoading ? 'Registering Patient...' : 'Register Patient'}
