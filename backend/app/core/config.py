@@ -27,8 +27,8 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     
-    # CORS - Allow multiple frontend ports for development
-    allowed_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:4173,http://127.0.0.1:5173,http://127.0.0.1:4173,http://localhost:8080"
+    # CORS - Allow multiple frontend ports for development and production
+    allowed_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:4173,http://127.0.0.1:5173,http://127.0.0.1:4173,http://localhost:8080,https://*.onrender.com"
     
     class Config:
         env_file = ".env"
@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     def allowed_origins_list(self) -> List[str]:
         """Convert allowed_origins string to list"""
         origins = [origin.strip() for origin in self.allowed_origins.split(",")]
+        
         # Add additional development origins
         if self.environment == "development":
             origins.extend([
@@ -45,6 +46,14 @@ class Settings(BaseSettings):
                 "http://127.0.0.1:*",
                 "http://0.0.0.0:*"
             ])
+        
+        # Add production origins for Render deployment
+        if self.environment == "production":
+            origins.extend([
+                "https://*.onrender.com",
+                "https://mhcqms-frontend.onrender.com"
+            ])
+        
         return origins
 
 # Create settings instance

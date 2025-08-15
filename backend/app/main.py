@@ -168,6 +168,19 @@ async def health_check():
         }
     )
 
+@app.get("/cors-test")
+async def cors_test():
+    """CORS test endpoint to verify CORS configuration"""
+    return JSONResponse(
+        content={
+            "message": "CORS test successful",
+            "cors_enabled": True,
+            "allowed_origins": settings.allowed_origins_list,
+            "environment": settings.environment,
+            "timestamp": "2024-01-01T10:00:00Z"
+        }
+    )
+
 @app.get("/api/v1")
 async def api_info():
     """API information and available endpoints"""

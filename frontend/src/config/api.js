@@ -18,7 +18,7 @@ export const API_CONFIG = {
   
   // CORS settings
   CORS: {
-    withCredentials: false,
+    withCredentials: true, // Must match backend allow_credentials=True
   },
   
   // Debug mode
