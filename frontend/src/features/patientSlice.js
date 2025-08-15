@@ -44,7 +44,16 @@ export const registerPatientWithQueue = createAsyncThunk(
       const response = await patientService.registerPatientWithQueue(registrationData)
       return response
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to register patient with queue')
+      console.error('Full error object:', error)
+      console.error('Error response:', error.response)
+      console.error('Error response data:', error.response?.data)
+      
+      // Return more detailed error information
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message || 
+                          error.message || 
+                          'Failed to register patient with queue'
+      return rejectWithValue(errorMessage)
     }
   }
 )

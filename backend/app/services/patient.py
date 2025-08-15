@@ -13,27 +13,48 @@ class PatientService:
 
     def create_patient(self, patient_data: PatientCreate) -> Patient:
         """Create a new patient"""
-        # Generate unique patient ID
-        patient_id = self._generate_patient_id()
-        
-        # Create patient object
-        db_patient = Patient(
-            patient_id=patient_id,
-            first_name=patient_data.first_name,
-            last_name=patient_data.last_name,
-            date_of_birth=patient_data.date_of_birth,
-            gender=patient_data.gender,
-            phone=patient_data.phone,
-            email=patient_data.email,
-            address=patient_data.address,
-            emergency_contact=patient_data.emergency_contact,
-            medical_history=patient_data.medical_history
-        )
-        
-        self.db.add(db_patient)
-        self.db.commit()
-        self.db.refresh(db_patient)
-        return db_patient
+        try:
+            # Generate unique patient ID
+            patient_id = self._generate_patient_id()
+            
+            # Import datetime for created_at
+            from datetime import datetime
+            
+            # Create patient object with all required fields
+            db_patient = Patient(
+                patient_id=patient_id,
+                first_name=patient_data.first_name,
+                last_name=patient_data.last_name,
+                date_of_birth=patient_data.date_of_birth,
+                gender=patient_data.gender,
+                phone=patient_data.phone,
+                email=patient_data.email,
+                address=patient_data.address,
+                emergency_contact=patient_data.emergency_contact,
+                medical_history=patient_data.medical_history,
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow()
+            )
+            
+            print(f"Creating patient with data: {db_patient}")
+            
+            self.db.add(db_patient)
+            self.db.commit()
+            self.db.refresh(db_patient)
+            
+            # Verify the patient was created correctly
+            if not db_patient.id:
+                raise ValueError("Failed to create patient - no ID generated")
+                
+            print(f"Patient created successfully with ID: {db_patient.id}")
+            return db_patient
+            
+        except Exception as e:
+            # Always rollback on any error
+            self.db.rollback()
+            print(f"Error creating patient: {e}")
+            print(f"Patient data: {patient_data}")
+            raise ValueError(f"Failed to create patient: {str(e)}")
 
     def get_patient(self, patient_id: int) -> Optional[Patient]:
         """Get a patient by ID"""
@@ -41,7 +62,11 @@ class PatientService:
 
     def get_patient_by_patient_id(self, patient_id: str) -> Optional[Patient]:
         """Get a patient by patient ID (external ID)"""
-        return self.db.query(Patient).filter(Patient.patient_id == patient_id).first()
+        try:
+            return self.db.query(Patient).filter(Patient.patient_id == patient_id).first()
+        except Exception as e:
+            print(f"Error querying patient by patient_id '{patient_id}': {e}")
+            return None
 
     def get_patients(self, skip: int = 0, limit: int = 100, search: Optional[str] = None) -> List[Patient]:
         """Get a list of patients with optional search and pagination"""

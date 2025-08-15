@@ -14,33 +14,49 @@ class QueueService:
 
     def add_to_queue(self, queue_data: QueueCreate) -> Queue:
         """Add a patient to the queue"""
-        # Check if patient is already in queue
-        existing_queue = self.db.query(Queue).filter(
-            Queue.patient_id == queue_data.patient_id,
-            Queue.status.in_([QueueStatus.WAITING, QueueStatus.IN_PROGRESS])
-        ).first()
-        
-        if existing_queue:
-            raise ValueError("Patient is already in queue")
-        
-        # Generate unique queue number
-        queue_number = self._generate_queue_number()
-        
-        # Create queue entry
-        db_queue = Queue(
-            queue_number=queue_number,
-            patient_id=queue_data.patient_id,
-            checkup_type=queue_data.checkup_type,
-            priority=queue_data.priority,
-            status=queue_data.status,
-            notes=queue_data.notes,
-            estimated_wait_time=queue_data.estimated_wait_time
-        )
-        
-        self.db.add(db_queue)
-        self.db.commit()
-        self.db.refresh(db_queue)
-        return db_queue
+        try:
+            print(f"Adding patient to queue: {queue_data}")
+            
+            # Check if patient is already in queue
+            existing_queue = self.db.query(Queue).filter(
+                Queue.patient_id == queue_data.patient_id,
+                Queue.status.in_([QueueStatus.WAITING, QueueStatus.IN_PROGRESS])
+            ).first()
+            
+            if existing_queue:
+                raise ValueError("Patient is already in queue")
+            
+            # Generate unique queue number
+            queue_number = self._generate_queue_number()
+            
+            print(f"Generated queue number: {queue_number}")
+            
+            # Create queue entry
+            db_queue = Queue(
+                queue_number=queue_number,
+                patient_id=queue_data.patient_id,
+                checkup_type=queue_data.checkup_type,
+                priority=queue_data.priority,
+                status=queue_data.status,
+                notes=queue_data.notes,
+                estimated_wait_time=queue_data.estimated_wait_time
+            )
+            
+            print(f"Created queue object: {db_queue}")
+            
+            self.db.add(db_queue)
+            self.db.commit()
+            self.db.refresh(db_queue)
+            
+            print(f"Queue entry saved successfully: {db_queue}")
+            return db_queue
+            
+        except Exception as e:
+            # Always rollback on any error
+            self.db.rollback()
+            print(f"Error adding patient to queue: {e}")
+            print(f"Queue data: {queue_data}")
+            raise ValueError(f"Failed to add patient to queue: {str(e)}")
 
     def get_queue_entry(self, queue_id: int) -> Optional[Queue]:
         """Get a queue entry by ID"""

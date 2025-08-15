@@ -23,3 +23,6 @@ class Patient(Base):
     medical_history = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    def __repr__(self):
+        return f"<Patient(id={self.id}, patient_id='{self.patient_id}', name='{self.first_name} {self.last_name}')>"

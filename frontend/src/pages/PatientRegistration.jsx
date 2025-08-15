@@ -1,13 +1,16 @@
-import { useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
-import { 
-  Container, 
-  Paper, 
-  TextField, 
-  Button, 
-  Typography, 
-  Box, 
+import React, {useState, useCallback, useMemo} from 'react';
+import {useDispatch, useSelector} from 'react-redux';
+import {useNavigate} from 'react-router-dom';
+import {useForm, Controller} from 'react-hook-form';
+import {yupResolver} from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import {
+  Container,
+  Paper,
+  TextField,
+  Button,
+  Typography,
+  Box,
   Grid,
   FormControl,
   InputLabel,
@@ -17,109 +20,89 @@ import {
   CircularProgress,
   Divider,
   useMediaQuery,
-  useTheme
-} from '@mui/material'
-import { 
-  PersonAddOutlined, 
-  SaveOutlined, 
+  useTheme,
+  Snackbar,
+} from '@mui/material';
+import {
+  PersonAddOutlined,
+  SaveOutlined,
   ClearOutlined,
   PersonOutline,
   Schedule,
   Emergency,
-  ContactPhone
-} from '@mui/icons-material'
-import { registerPatientWithQueue } from '../features/patientSlice'
+  ContactPhone,
+} from '@mui/icons-material';
+import {registerPatientWithQueue} from '../features/patientSlice';
+
+// Validation schema
+const patientSchema = yup.object({
+  first_name: yup
+    .string()
+    .required('First name is required')
+    .min(2, 'First name must be at least 2 characters'),
+  last_name: yup
+    .string()
+    .required('Last name is required')
+    .min(2, 'Last name must be at least 2 characters'),
+  date_of_birth: yup
+    .string()
+    .required('Date of birth is required')
+    .test('valid-date', 'Please enter a valid date', function (value) {
+      if (!value) return false;
+      const date = new Date(value);
+      return !isNaN(date.getTime()) && date <= new Date();
+    }),
+  gender: yup
+    .string()
+    .required('Gender is required')
+    .oneOf(['male', 'female', 'other'], 'Please select a valid gender'),
+  phone: yup
+    .string()
+    .required('Phone number is required')
+    .matches(
+      /^[\+]?[1-9][\d]{0,15}$/,
+      'Please enter a valid phone number (e.g., 1234567890 or +1234567890)'
+    ),
+  email: yup.string().email('Please enter a valid email address').nullable(),
+  address: yup.string().nullable(),
+  checkup_type: yup
+    .string()
+    .required('Checkup type is required')
+    .min(3, 'Checkup type must be at least 3 characters'),
+  priority: yup
+    .number()
+    .required('Priority is required')
+    .min(0, 'Priority must be 0 or greater')
+    .max(2, 'Priority must be 2 or less'),
+  symptoms: yup.string().nullable(),
+  emergency_contact: yup
+    .string()
+    .nullable()
+    .test(
+      'phone-format',
+      'Please enter a valid phone number (e.g., 1234567890 or +1234567890)',
+      function (value) {
+        if (!value) return true; // Optional field
+        return /^[\+]?[1-9][\d]{0,15}$/.test(value);
+      }
+    ),
+  estimated_wait_time: yup
+    .number()
+    .required('Estimated wait time is required')
+    .min(0, 'Wait time must be 0 or greater')
+    .max(480, 'Wait time cannot exceed 8 hours (480 minutes)'),
+});
 
 const PatientRegistration = () => {
-  const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    date_of_birth: '',
-    gender: '',
-    phone: '',
-    email: '',
-    address: '',
-    checkup_type: '',
-    priority: 0,
-    symptoms: '',
-    emergency_contact: '',
-    estimated_wait_time: 30,
-  })
+  const [showSuccess, setShowSuccess] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const {isLoading, error} = useSelector((state) => state.patients);
 
-  const [errors, setErrors] = useState({})
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
-  const { isLoading, error } = useSelector((state) => state.patients)
-
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-    
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }))
-    }
-  }
-
-  const validateForm = () => {
-    const newErrors = {}
-    
-    if (!formData.first_name.trim()) newErrors.first_name = 'First name is required'
-    if (!formData.last_name.trim()) newErrors.last_name = 'Last name is required'
-    if (!formData.date_of_birth) newErrors.date_of_birth = 'Date of birth is required'
-    if (!formData.gender) newErrors.gender = 'Gender is required'
-    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required'
-    if (!formData.checkup_type.trim()) newErrors.checkup_type = 'Checkup type is required'
-    
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const transformFormData = () => {
-    // Transform the form data to match the backend schema
-    const transformed = {
-      first_name: formData.first_name,
-      last_name: formData.last_name,
-      date_of_birth: formData.date_of_birth,
-      gender: formData.gender,
-      phone: formData.phone,
-      email: formData.email || null,
-      address: formData.address || null,
-      emergency_contact: formData.emergency_contact || null,
-      medical_history: formData.symptoms || null,
-      checkup_type: formData.checkup_type,
-      priority: parseInt(formData.priority),
-      notes: formData.symptoms || null,
-      estimated_wait_time: parseInt(formData.estimated_wait_time) || 30
-    }
-    
-    return transformed
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    
-    if (!validateForm()) return
-    
-    try {
-      const transformedData = transformFormData()
-      await dispatch(registerPatientWithQueue(transformedData)).unwrap()
-      navigate('/queue')
-    } catch (error) {
-      console.error('Failed to register patient:', error)
-    }
-  }
-
-  const handleClear = () => {
-    setFormData({
+  const defaultValues = useMemo(
+    () => ({
       first_name: '',
       last_name: '',
       date_of_birth: '',
@@ -132,38 +115,275 @@ const PatientRegistration = () => {
       symptoms: '',
       emergency_contact: '',
       estimated_wait_time: 30,
-    })
-    setErrors({})
-  }
+    }),
+    []
+  );
 
-  const getCurrentDate = () => {
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, '0')
-    const day = String(now.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: {errors, isValid, isDirty},
+    setValue,
+  } = useForm({
+    resolver: yupResolver(patientSchema),
+    mode: 'onChange',
+    defaultValues,
+  });
 
-  const FormSection = ({ title, description, icon, children, color = "blue" }) => (
-    <Grid item xs={12}>
-      <Box className={`bg-${color}-50/80 backdrop-blur-sm rounded-2xl p-6 mb-6 border border-${color}-200/50`}>
-        <Box className="flex items-center space-x-3 mb-4">
-          <Box className={`p-3 bg-${color}-100 rounded-xl`}>
-            {icon}
+  const handleDateChange = useCallback(
+    (fieldName, value) => {
+      console.log(`📅 Date change for ${fieldName}:`, value);
+      console.log(`📅 Date change type:`, typeof value);
+
+      if (value && typeof value === 'string') {
+        // Ensure we only get the date part
+        const dateOnly = value.split('T')[0];
+        console.log(`✅ Extracted date only:`, dateOnly);
+
+        // Update the form with the clean date
+        setValue(fieldName, dateOnly);
+      }
+    },
+    [setValue]
+  );
+
+  const FormField = useCallback(
+    ({
+      name,
+      label,
+      type = 'text',
+      required = false,
+      multiline = false,
+      rows = 1,
+      placeholder = '',
+      inputProps = {},
+      select = false,
+      options = [],
+      helperText = '',
+      control,
+      errors,
+    }) => (
+      <Controller
+        name={name}
+        control={control}
+        render={({field}) => (
+          <TextField
+            {...field}
+            fullWidth
+            label={label}
+            type={type}
+            required={required}
+            multiline={multiline}
+            rows={rows}
+            placeholder={placeholder}
+            variant="outlined"
+            size="medium"
+            error={!!errors[name]}
+            helperText={errors[name]?.message || helperText}
+            className="search-field focus-ring"
+            InputLabelProps={type === 'date' ? {shrink: true} : {}}
+            inputProps={inputProps}
+            select={select}
+            SelectProps={
+              select ? {MenuProps: {PaperProps: {style: {maxHeight: 200}}}} : {}
+            }
+            onChange={(e) => {
+              const value = e.target.value;
+              field.onChange(value);
+
+              // Special handling for date fields
+              if (type === 'date') {
+                handleDateChange(name, value);
+              }
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                height: multiline ? 'auto' : '56px',
+                '& fieldset': {
+                  borderColor: errors[name] ? '#ef4444' : '#d1d5db',
+                },
+                '&:hover fieldset': {
+                  borderColor: errors[name] ? '#ef4444' : '#9ca3af',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: errors[name] ? '#ef4444' : '#3b82f6',
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: errors[name] ? '#ef4444' : '#6b7280',
+              },
+              '& .MuiFormHelperText-root': {
+                marginLeft: 0,
+                marginRight: 0,
+              },
+            }}>
+            {select &&
+              options.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+          </TextField>
+        )}
+      />
+    ),
+    [control, errors, handleDateChange]
+  );
+
+  const FormSection = useCallback(
+    ({title, description, icon, children, color = 'blue'}) => (
+      <Grid item xs={12} className="w-full">
+        <Box
+          className={`bg-${color}-50/80 backdrop-blur-sm rounded-2xl p-6 mb-6 border border-${color}-200/50`}>
+          <Box className="flex items-center space-x-3 mb-6">
+            <Box className={`p-3 bg-${color}-100 rounded-xl`}>{icon}</Box>
+            <Box>
+              <Typography
+                variant="h5"
+                className={`font-semibold text-${color}-800 mb-1`}>
+                {title}
+              </Typography>
+              <Typography variant="body2" className={`text-${color}-700`}>
+                {description}
+              </Typography>
+            </Box>
           </Box>
-          <Box>
-            <Typography variant="h5" className={`font-semibold text-${color}-800 mb-1`}>
-              {title}
-            </Typography>
-            <Typography variant="body2" className={`text-${color}-700`}>
-              {description}
-            </Typography>
-          </Box>
+          {children}
         </Box>
-        {children}
-      </Box>
-    </Grid>
-  )
+      </Grid>
+    ),
+    []
+  );
+
+  const transformFormData = useCallback((data) => {
+    // Format date to remove time information - backend expects date only
+    const formatDate = (dateString) => {
+      if (!dateString) return null;
+
+      console.log('🔍 Original date string:', dateString);
+      console.log('🔍 Type of date string:', typeof dateString);
+
+      // Handle different date formats
+      let date;
+      if (typeof dateString === 'string') {
+        // If it's already in YYYY-MM-DD format, return as is
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+          console.log('✅ Date is already in correct format:', dateString);
+          return dateString;
+        }
+
+        // If it's a datetime string, extract just the date part
+        if (dateString.includes('T')) {
+          console.log('🔄 Converting datetime to date:', dateString);
+          const datePart = dateString.split('T')[0];
+          console.log('✅ Extracted date part:', datePart);
+          return datePart;
+        }
+
+        // Parse the date string
+        date = new Date(dateString);
+      } else {
+        date = dateString;
+      }
+
+      console.log('🔍 Parsed date object:', date);
+      console.log('🔍 Date validity:', !isNaN(date.getTime()));
+
+      if (isNaN(date.getTime())) {
+        console.error('❌ Invalid date:', dateString);
+        return null;
+      }
+
+      // Format to YYYY-MM-DD without timezone issues
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
+
+      console.log('✅ Formatted date:', formattedDate);
+      return formattedDate;
+    };
+
+    const transformed = {
+      first_name: data.first_name,
+      last_name: data.last_name,
+      date_of_birth: formatDate(data.date_of_birth),
+      gender: data.gender,
+      phone: data.phone,
+      email: data.email || null,
+      address: data.address || null,
+      emergency_contact: data.emergency_contact || null,
+      medical_history: data.symptoms || null,
+      checkup_type: data.checkup_type,
+      priority: parseInt(data.priority),
+      notes: data.symptoms || null,
+      estimated_wait_time: parseInt(data.estimated_wait_time) || 30,
+    };
+
+    console.log('🚀 Final transformed data:', transformed);
+    return transformed;
+  }, []);
+
+  const onSubmit = useCallback(
+    async (data) => {
+      try {
+        console.log('📝 Form submitted with data:', data);
+        console.log('📅 Date of birth from form:', data.date_of_birth);
+        console.log('📅 Date of birth type:', typeof data.date_of_birth);
+
+        // Force date formatting before submission
+        let processedData = {...data};
+        if (data.date_of_birth) {
+          // Ensure date is in correct format
+          if (
+            typeof data.date_of_birth === 'string' &&
+            data.date_of_birth.includes('T')
+          ) {
+            const dateOnly = data.date_of_birth.split('T')[0];
+            console.log(
+              '🔄 Force converting datetime to date:',
+              data.date_of_birth,
+              '→',
+              dateOnly
+            );
+            processedData.date_of_birth = dateOnly;
+          }
+        }
+
+        const transformedData = transformFormData(processedData);
+        console.log('🔄 Original form data:', data);
+        console.log('🔄 Processed form data:', processedData);
+        console.log(
+          '🚀 Transformed data being sent to backend:',
+          transformedData
+        );
+        console.log('📅 Final date of birth:', transformedData.date_of_birth);
+
+        await dispatch(registerPatientWithQueue(transformedData)).unwrap();
+        setShowSuccess(true);
+        setTimeout(() => {
+          navigate('/queue');
+        }, 2000);
+      } catch (error) {
+        console.error('❌ Failed to register patient:', error);
+        // Error is already handled by Redux state
+      }
+    },
+    [dispatch, navigate, transformFormData]
+  );
+
+  const handleClear = useCallback(() => {
+    reset(defaultValues);
+  }, [reset, defaultValues]);
+
+  const getCurrentDate = useCallback(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }, []);
 
   return (
     <Box className="max-w-6xl mx-auto space-y-8 fade-in">
@@ -172,150 +392,166 @@ const PatientRegistration = () => {
         <Box className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl mb-6 shadow-lg">
           <PersonAddOutlined className="text-4xl text-blue-600" />
         </Box>
-        <Typography 
-          variant={isMobile ? "h4" : "h3"} 
-          component="h1" 
-          className="font-bold text-slate-800 mb-3 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"
-        >
+        <Typography
+          variant={isMobile ? 'h4' : 'h3'}
+          component="h1"
+          className="font-bold text-slate-800 mb-3 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
           Patient Registration
         </Typography>
-        <Typography 
-          variant={isMobile ? "body1" : "h6"} 
-          className="text-slate-600 font-normal"
-        >
+        <Typography
+          variant={isMobile ? 'body1' : 'h6'}
+          className="text-slate-600 font-normal">
           Add new patients to the queue management system
         </Typography>
       </Box>
 
       {error && (
-        <Alert severity="error" className="content-spacing slide-up">
+        <Alert severity="error" className="content-spacing slide-up mb-6">
           {error}
         </Alert>
       )}
 
       {/* Form Section */}
-      <Paper elevation={0} className="card p-8 slide-up" style={{ animationDelay: '200ms' }}>
-        <form onSubmit={handleSubmit}>
+      <Paper
+        elevation={0}
+        className="card p-8 slide-up"
+        style={{animationDelay: '200ms'}}>
+        {/* Form Validation Summary */}
+        <Box className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200/50">
+          <Box className="flex items-center justify-between">
+            <Box className="flex items-center space-x-3">
+              <Box className="p-2 bg-blue-100 rounded-lg">
+                <PersonAddOutlined className="text-blue-600" />
+              </Box>
+              <Box>
+                <Typography
+                  variant="h6"
+                  className="font-semibold text-blue-800">
+                  Form Status
+                </Typography>
+                <Typography variant="body2" className="text-blue-700">
+                  {isValid
+                    ? 'All fields are valid ✓'
+                    : 'Please complete all required fields'}
+                </Typography>
+              </Box>
+            </Box>
+            <Box className="text-right">
+              <Typography
+                variant="h4"
+                className={`font-bold ${
+                  isValid ? 'text-green-600' : 'text-blue-600'
+                }`}>
+                {Object.keys(errors).length === 0
+                  ? '✓'
+                  : Object.keys(errors).length}
+              </Typography>
+              <Typography variant="caption" className="text-blue-600">
+                {Object.keys(errors).length === 0 ? 'Ready' : 'Errors'}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+
+        <form onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={4}>
             {/* Basic Information */}
             <FormSection
               title="Basic Information"
               description="Enter the patient's personal details"
               icon={<PersonOutline className="text-2xl text-blue-600" />}
-              color="blue"
-            >
+              color="blue">
               <Grid container spacing={4}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="First Name"
-                    name="first_name"
-                    value={formData.first_name}
-                    onChange={handleChange}
-                    error={!!errors.first_name}
-                    helperText={errors.first_name}
-                    required
-                    variant="outlined"
-                    size="medium"
-                    className="search-field focus-ring"
-                  />
-                </Grid>
-                
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Last Name"
-                    name="last_name"
-                    value={formData.last_name}
-                    onChange={handleChange}
-                    error={!!errors.last_name}
-                    helperText={errors.last_name}
-                    required
-                    variant="outlined"
-                    size="medium"
-                    className="search-field focus-ring"
-                  />
-                </Grid>
-                
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Date of Birth"
-                    name="date_of_birth"
-                    type="date"
-                    value={formData.date_of_birth}
-                    onChange={handleChange}
-                    error={!!errors.date_of_birth}
-                    helperText={errors.date_of_birth}
-                    required
-                    variant="outlined"
-                    size="medium"
-                    className="search-field focus-ring"
-                    InputLabelProps={{ shrink: true }}
-                    inputProps={{ max: getCurrentDate() }}
-                  />
-                </Grid>
-                
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth required error={!!errors.gender} size="medium">
-                    <InputLabel>Gender</InputLabel>
-                    <Select
+                <div className="flex justify-between items-start w-full space-x-3">
+                  <Grid item xs={12} className="w-full">
+                    <FormField
+                      className="w-[150px]"
+                      name="first_name"
+                      label="First Name"
+                      required
+                      placeholder="Enter first name"
+                      control={control}
+                      errors={errors}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} className="w-full">
+                    <FormField
+                      className="w-full"
+                      name="last_name"
+                      label="Last Name"
+                      required
+                      placeholder="Enter last name"
+                      control={control}
+                      errors={errors}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} className="w-full">
+                    <FormField
+                      className="w-full"
+                      name="date_of_birth"
+                      label="Date of Birth"
+                      type="date"
+                      required
+                      inputProps={{max: getCurrentDate()}}
+                      control={control}
+                      errors={errors}
+                    />
+                  </Grid>
+                </div>
+                <div className="flex justify-between items-start w-full space-x-3">
+                  <Grid item xs={12} sm={6} className="w-full">
+                    <FormField
+                      className="!w-full"
                       name="gender"
-                      value={formData.gender}
-                      onChange={handleChange}
                       label="Gender"
-                      variant="outlined"
-                      className="search-field focus-ring"
-                    >
-                      <MenuItem value="male">Male</MenuItem>
-                      <MenuItem value="female">Female</MenuItem>
-                      <MenuItem value="other">Other</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-                
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Phone Number"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    error={!!errors.phone}
-                    helperText={errors.phone}
-                    required
-                    variant="outlined"
-                    size="medium"
-                    className="search-field focus-ring"
-                  />
-                </Grid>
-                
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Email Address"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    variant="outlined"
-                    size="medium"
-                    className="search-field focus-ring"
-                  />
-                </Grid>
-                
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Address"
+                      select
+                      required
+                      options={[
+                        {value: 'male', label: 'Male'},
+                        {value: 'female', label: 'Female'},
+                        {value: 'other', label: 'Other'},
+                      ]}
+                      control={control}
+                      errors={errors}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} sm={6} className="w-full">
+                    <FormField
+                      name="phone"
+                      label="Phone Number"
+                      required
+                      placeholder="Enter phone number"
+                      helperText="Enter phone number without spaces (e.g., 1234567890)"
+                      control={control}
+                      errors={errors}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} sm={6} className="w-full">
+                    <FormField
+                      name="email"
+                      label="Email Address"
+                      type="email"
+                      placeholder="Enter email address (optional)"
+                      helperText="Optional - for appointment confirmations"
+                      control={control}
+                      errors={errors}
+                    />
+                  </Grid>
+                </div>
+
+                <Grid item xs={12} className="w-full">
+                  <FormField
                     name="address"
-                    value={formData.address}
-                    onChange={handleChange}
+                    label="Address"
                     multiline
                     rows={2}
-                    variant="outlined"
-                    size="medium"
-                    className="search-field focus-ring"
+                    placeholder="Enter full address (optional)"
+                    control={control}
+                    errors={errors}
                   />
                 </Grid>
               </Grid>
@@ -326,57 +562,48 @@ const PatientRegistration = () => {
               title="Appointment Details"
               description="Schedule and prioritize the appointment"
               icon={<Schedule className="text-2xl text-emerald-600" />}
-              color="emerald"
-            >
+              color="emerald">
               <Grid container spacing={4}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Checkup Type"
-                    name="checkup_type"
-                    value={formData.checkup_type}
-                    onChange={handleChange}
-                    error={!!errors.checkup_type}
-                    helperText={errors.checkup_type}
-                    required
-                    variant="outlined"
-                    size="medium"
-                    className="search-field focus-ring"
-                    placeholder="e.g., General Checkup, Consultation"
-                  />
-                </Grid>
-                
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth size="medium">
-                    <InputLabel>Priority Level</InputLabel>
-                    <Select
+                <div className="flex justify-between items-start w-full space-x-3">
+                  <Grid item xs={12} sm={6} className="w-full">
+                    <FormField
+                      className="w-full"
+                      name="checkup_type"
+                      label="Checkup Type"
+                      required
+                      placeholder="e.g., General Checkup, Consultation"
+                      control={control}
+                      errors={errors}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} sm={6} className="w-full">
+                    <FormField
+                      className="w-full"
                       name="priority"
-                      value={formData.priority}
-                      onChange={handleChange}
                       label="Priority Level"
-                      variant="outlined"
-                      className="search-field focus-ring"
-                    >
-                      <MenuItem value={0}>Normal</MenuItem>
-                      <MenuItem value={1}>Urgent</MenuItem>
-                      <MenuItem value={2}>Emergency</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-                
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Symptoms/Reason for Visit"
+                      select
+                      required
+                      options={[
+                        {value: 0, label: 'Normal'},
+                        {value: 1, label: 'Urgent'},
+                        {value: 2, label: 'Emergency'},
+                      ]}
+                      control={control}
+                      errors={errors}
+                    />
+                  </Grid>
+                </div>
+                <Grid item xs={12} className="w-full">
+                  <FormField
+                    className="w-full"
                     name="symptoms"
-                    value={formData.symptoms}
-                    onChange={handleChange}
+                    label="Symptoms/Reason for Visit"
                     multiline
                     rows={3}
-                    variant="outlined"
-                    size="medium"
-                    className="search-field focus-ring"
                     placeholder="Describe the patient's symptoms or reason for the appointment..."
+                    control={control}
+                    errors={errors}
                   />
                 </Grid>
               </Grid>
@@ -387,36 +614,34 @@ const PatientRegistration = () => {
               title="Emergency Contact (Optional)"
               description="Additional contact information for emergencies"
               icon={<ContactPhone className="text-2xl text-orange-600" />}
-              color="orange"
-            >
+              color="orange">
               <Grid container spacing={4}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Emergency Contact Phone"
-                    name="emergency_contact"
-                    value={formData.emergency_contact}
-                    onChange={handleChange}
-                    variant="outlined"
-                    size="medium"
-                    className="search-field focus-ring"
-                  />
-                </Grid>
-                
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Estimated Wait Time (minutes)"
-                    name="estimated_wait_time"
-                    type="number"
-                    value={formData.estimated_wait_time}
-                    onChange={handleChange}
-                    variant="outlined"
-                    size="medium"
-                    className="search-field focus-ring"
-                    inputProps={{ min: 0, max: 480 }}
-                  />
-                </Grid>
+                <div className="flex justify-between items-start w-full space-x-3">
+                  <Grid item xs={12} sm={6} className="w-full">
+                    <FormField
+                      name="emergency_contact"
+                      label="Emergency Contact Phone"
+                      placeholder="Enter emergency contact phone (optional)"
+                      helperText="Optional - for urgent situations"
+                      control={control}
+                      errors={errors}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} sm={6} className="w-full">
+                    <FormField
+                      name="estimated_wait_time"
+                      label="Estimated Wait Time (minutes)"
+                      type="number"
+                      required
+                      inputProps={{min: 0, max: 480}}
+                      placeholder="30"
+                      helperText="Estimated time until patient can be seen"
+                      control={control}
+                      errors={errors}
+                    />
+                  </Grid>
+                </div>
               </Grid>
             </FormSection>
           </Grid>
@@ -429,24 +654,40 @@ const PatientRegistration = () => {
               startIcon={<ClearOutlined />}
               className="btn-secondary focus-ring"
               size="large"
-            >
+              type="button"
+              disabled={!isDirty}>
               Clear Form
             </Button>
             <Button
               type="submit"
               variant="contained"
-              disabled={isLoading}
-              startIcon={isLoading ? <CircularProgress size={20} /> : <SaveOutlined />}
+              disabled={isLoading || !isValid}
+              startIcon={
+                isLoading ? <CircularProgress size={20} /> : <SaveOutlined />
+              }
               className="btn-primary focus-ring"
-              size="large"
-            >
+              size="large">
               {isLoading ? 'Registering Patient...' : 'Register Patient'}
             </Button>
           </Box>
         </form>
       </Paper>
-    </Box>
-  )
-}
 
-export default PatientRegistration
+      {/* Success Snackbar */}
+      <Snackbar
+        open={showSuccess}
+        autoHideDuration={3000}
+        onClose={() => setShowSuccess(false)}
+        anchorOrigin={{vertical: 'top', horizontal: 'center'}}>
+        <Alert
+          onClose={() => setShowSuccess(false)}
+          severity="success"
+          sx={{width: '100%'}}>
+          Patient registered successfully! Redirecting to queue...
+        </Alert>
+      </Snackbar>
+    </Box>
+  );
+};
+
+export default PatientRegistration;

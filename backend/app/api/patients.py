@@ -340,6 +340,8 @@ async def register_patient_with_queue(
     - **estimated_wait_time**: Estimated wait time in minutes (optional)
     """
     try:
+        print(f"Received registration data: {registration_data}")
+        
         # Extract patient data
         patient_data = PatientCreate(
             first_name=registration_data["first_name"],
@@ -353,9 +355,14 @@ async def register_patient_with_queue(
             medical_history=registration_data.get("medical_history")
         )
         
+        print(f"Created patient data object: {patient_data}")
+        
         # Create patient
         patient_service = PatientService(db)
         patient = patient_service.create_patient(patient_data)
+        
+        print(f"Patient created successfully: {patient}")
+        print(f"Patient ID: {patient.id}, Patient ID string: {patient.patient_id}")
         
         # Create queue entry
         queue_data = QueueCreate(
@@ -366,20 +373,60 @@ async def register_patient_with_queue(
             estimated_wait_time=registration_data.get("estimated_wait_time", 30)
         )
         
+        print(f"Queue data: {queue_data}")
+        
         queue_service = QueueService(db)
         queue_entry = queue_service.add_to_queue(queue_data)
         
-        return {
-            "patient": patient,
-            "queue": queue_entry
+        print(f"Queue entry created: {queue_entry}")
+        
+        # Prepare response
+        response = {
+            "patient": {
+                "id": patient.id,
+                "patient_id": patient.patient_id,
+                "first_name": patient.first_name,
+                "last_name": patient.last_name,
+                "date_of_birth": patient.date_of_birth,
+                "gender": patient.gender,
+                "phone": patient.phone,
+                "email": patient.email,
+                "address": patient.address,
+                "emergency_contact": patient.emergency_contact,
+                "medical_history": patient.medical_history,
+                "created_at": patient.created_at,
+                "updated_at": patient.updated_at
+            },
+            "queue": {
+                "id": queue_entry.id,
+                "queue_number": queue_entry.queue_number,
+                "patient_id": queue_entry.patient_id,
+                "checkup_type": queue_entry.checkup_type,
+                "priority": queue_entry.priority,
+                "status": queue_entry.status.value,
+                "notes": queue_entry.notes,
+                "estimated_wait_time": queue_entry.estimated_wait_time,
+                "check_in_time": queue_entry.check_in_time,
+                "start_time": queue_entry.start_time,
+                "end_time": queue_entry.end_time,
+                "created_at": queue_entry.created_at,
+                "updated_at": queue_entry.updated_at
+            }
         }
         
+        print(f"Response prepared: {response}")
+        return response
+        
     except ValueError as e:
+        print(f"ValueError in registration: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
     except Exception as e:
+        print(f"Unexpected error in registration: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to register patient: {str(e)}"

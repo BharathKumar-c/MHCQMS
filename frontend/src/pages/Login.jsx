@@ -1,65 +1,67 @@
-import { useState, useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { 
-  Container, 
-  Paper, 
-  TextField, 
-  Button, 
-  Typography, 
-  Box, 
+import {useState, useEffect} from 'react';
+import {useDispatch, useSelector} from 'react-redux';
+import {useNavigate, useLocation} from 'react-router-dom';
+import {
+  Container,
+  Paper,
+  TextField,
+  Button,
+  Typography,
+  Box,
   Alert,
   CircularProgress,
   useMediaQuery,
-  useTheme
-} from '@mui/material'
-import { LockOutlined, Visibility, VisibilityOff } from '@mui/icons-material'
-import { login, clearError } from '../features/authSlice'
+  useTheme,
+} from '@mui/material';
+import {LockOutlined, Visibility, VisibilityOff} from '@mui/icons-material';
+import {login, clearError} from '../features/authSlice';
 
 const Login = () => {
   const [credentials, setCredentials] = useState({
     username: '',
     password: '',
-  })
-  
-  const [showPassword, setShowPassword] = useState(false)
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
-  
-  const { isLoading, error, isAuthenticated } = useSelector((state) => state.auth)
-  
-  const from = location.state?.from?.pathname || '/dashboard'
+  });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  const {isLoading, error, isAuthenticated} = useSelector(
+    (state) => state.auth
+  );
+
+  const from = location.state?.from?.pathname || '/dashboard';
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate(from, { replace: true })
+      navigate(from, {replace: true});
     }
-  }, [isAuthenticated, navigate, from])
+  }, [isAuthenticated, navigate, from]);
 
   useEffect(() => {
     return () => {
-      dispatch(clearError())
-    }
-  }, [dispatch])
+      dispatch(clearError());
+    };
+  }, [dispatch]);
 
   const handleChange = (e) => {
     setCredentials({
       ...credentials,
       [e.target.name]: e.target.value,
-    })
-  }
+    });
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    await dispatch(login(credentials))
-  }
+    e.preventDefault();
+    await dispatch(login(credentials));
+  };
 
   const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword)
-  }
+    setShowPassword(!showPassword);
+  };
 
   return (
     <Box className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-100 to-purple-100 flex items-center justify-center p-4 relative overflow-hidden">
@@ -71,47 +73,46 @@ const Login = () => {
       </Box>
 
       <Container maxWidth="sm" className="relative z-10">
-        <Paper 
-          elevation={0} 
-          className="card p-8 md:p-12 backdrop-blur-md bg-white/90 border border-white/30"
-        >
+        <Paper
+          elevation={0}
+          className="card p-8 md:p-12 backdrop-blur-md bg-white/90 border border-white/30">
           {/* Header Section */}
           <Box className="text-center mb-10 fade-in">
             <Box className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-3xl mb-6 shadow-lg">
               <LockOutlined className="text-5xl text-blue-600" />
             </Box>
-            <Typography 
-              variant={isMobile ? "h4" : "h3"} 
-              component="h1" 
-              className="font-bold text-slate-800 mb-3 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"
-            >
+            <Typography
+              variant={isMobile ? 'h4' : 'h3'}
+              component="h1"
+              className="font-bold text-slate-800 mb-3 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               MHCQMS Login
             </Typography>
-            <Typography 
-              variant={isMobile ? "body1" : "h6"} 
-              className="text-slate-600 font-normal"
-            >
+            <Typography
+              variant={isMobile ? 'body1' : 'h6'}
+              className="text-slate-600 font-normal">
               Sign in to access the patient queue management system
             </Typography>
           </Box>
 
           {/* Error Alert */}
           {error && (
-            <Alert 
-              severity="error" 
+            <Alert
+              severity="error"
               className="mb-6 slide-up"
               sx={{
                 '& .MuiAlert-icon': {
-                  fontSize: '1.5rem'
-                }
-              }}
-            >
+                  fontSize: '1.5rem',
+                },
+              }}>
               {error}
             </Alert>
           )}
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-6 slide-up" style={{ animationDelay: '200ms' }}>
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6 slide-up"
+            style={{animationDelay: '200ms'}}>
             <TextField
               fullWidth
               label="Username"
@@ -131,7 +132,7 @@ const Login = () => {
                 },
               }}
             />
-            
+
             <TextField
               fullWidth
               label="Password"
@@ -149,8 +150,7 @@ const Login = () => {
                     <Button
                       onClick={togglePasswordVisibility}
                       className="text-slate-500 hover:text-slate-700 p-1 min-w-0"
-                      size="small"
-                    >
+                      size="small">
                       {showPassword ? <VisibilityOff /> : <Visibility />}
                     </Button>
                   </Box>
@@ -164,15 +164,14 @@ const Login = () => {
                 },
               }}
             />
-            
+
             <Button
               type="submit"
               fullWidth
               variant="contained"
               size="large"
               disabled={isLoading}
-              className="btn-primary py-4 text-lg font-semibold focus-ring"
-            >
+              className="btn-primary py-4 text-lg font-semibold focus-ring">
               {isLoading ? (
                 <Box className="flex items-center space-x-2">
                   <CircularProgress size={24} color="inherit" />
@@ -185,22 +184,28 @@ const Login = () => {
           </form>
 
           {/* Demo Credentials */}
-          <Box className="mt-8 text-center slide-up" style={{ animationDelay: '400ms' }}>
+          <Box
+            className="mt-8 text-center slide-up"
+            style={{animationDelay: '400ms'}}>
             <Box className="inline-block p-4 bg-slate-50/80 rounded-xl border border-slate-200/50">
-              <Typography variant="body2" className="text-slate-600 font-medium mb-2">
+              <Typography
+                variant="body2"
+                className="text-slate-600 font-medium mb-2">
                 Demo Credentials
               </Typography>
               <Typography variant="body2" className="text-slate-500 font-mono">
-                Username: admin
+                Username: demo
               </Typography>
               <Typography variant="body2" className="text-slate-500 font-mono">
-                Password: password123
+                Password: demo@12345
               </Typography>
             </Box>
           </Box>
 
           {/* Footer */}
-          <Box className="mt-8 text-center slide-up" style={{ animationDelay: '600ms' }}>
+          <Box
+            className="mt-8 text-center slide-up"
+            style={{animationDelay: '600ms'}}>
             <Typography variant="body2" className="text-slate-400">
               Healthcare Queue Management System
             </Typography>
@@ -208,7 +213,7 @@ const Login = () => {
         </Paper>
       </Container>
     </Box>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;
