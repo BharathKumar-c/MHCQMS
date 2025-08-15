@@ -1,0 +1,310 @@
+{
+  "info": {
+    "name": "MHCQMS API Collection",
+    "description": "API collection for Mental Health Clinic Queue Management System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "User Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin@example.com\",\n  \"password\": \"your_password_here\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "User Registration",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"secure_password\",\n  \"full_name\": \"John Doe\",\n  \"role\": \"staff\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/",
+              "host": ["{{base_url}}"],
+              "path": ["users", ""]
+            }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["users", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Updated Name\",\n  \"email\": \"updated@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["users", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Patients",
+      "item": [
+        {
+          "name": "Get All Patients",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/patients/",
+              "host": ["{{base_url}}"],
+              "path": ["patients", ""]
+            }
+          }
+        },
+        {
+          "name": "Create Patient",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Jane Smith\",\n  \"date_of_birth\": \"1990-01-01\",\n  \"phone_number\": \"+1234567890\",\n  \"email\": \"jane.smith@example.com\",\n  \"address\": \"123 Main St, City, State\",\n  \"emergency_contact\": \"John Smith\",\n  \"emergency_phone\": \"+1234567891\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/patients/",
+              "host": ["{{base_url}}"],
+              "path": ["patients", ""]
+            }
+          }
+        },
+        {
+          "name": "Get Patient by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/patients/1",
+              "host": ["{{base_url}}"],
+              "path": ["patients", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Patient",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"+1987654321\",\n  \"address\": \"456 Oak Ave, City, State\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/patients/1",
+              "host": ["{{base_url}}"],
+              "path": ["patients", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Queue Management",
+      "item": [
+        {
+          "name": "Get Queue Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/queue/",
+              "host": ["{{base_url}}"],
+              "path": ["queue", ""]
+            }
+          }
+        },
+        {
+          "name": "Add Patient to Queue",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient_id\": 1,\n  \"priority\": \"normal\",\n  \"notes\": \"Regular checkup appointment\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/queue/",
+              "host": ["{{base_url}}"],
+              "path": ["queue", ""]
+            }
+          }
+        },
+        {
+          "name": "Update Queue Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\",\n  \"notes\": \"Patient called in for consultation\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/queue/1",
+              "host": ["{{base_url}}"],
+              "path": ["queue", "1"]
+            }
+          }
+        },
+        {
+          "name": "Remove Patient from Queue",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/queue/1",
+              "host": ["{{base_url}}"],
+              "path": ["queue", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://mhcqms-backend.onrender.com/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "your_access_token_here",
+      "type": "string"
+    }
+  ]
+}
