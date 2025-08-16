@@ -68,7 +68,7 @@ MHCQMS/
    # On Windows
    venv\Scripts\activate
    # On macOS/Linux
-   source venv/bin/activate
+   source venv/Script/activate
    ```
 
 3. **Install dependencies:**
